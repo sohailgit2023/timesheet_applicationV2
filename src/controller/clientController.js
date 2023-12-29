@@ -6,9 +6,7 @@ const helpers = require('./../helper/helper');
 
     module.exports.getAllClient= (req,resp)=>{
         const selectParams = {
-            clientId:1,
-            name: 1,
-           
+            _id:0
         };
        Client.getAll({},selectParams).then(client=>{
         // console.log(employee);
@@ -28,8 +26,7 @@ module.exports.registerClient = (req, resp, postData) => {
     try {
 
         const selectParams = {
-            clientId:1,
-            name: 1,
+            _id:0
         };
         // console.log("1");
         clientModel.findOne({}, { clientId: 1 }).sort({ clientId: -1 }).limit(1).then(result => {
