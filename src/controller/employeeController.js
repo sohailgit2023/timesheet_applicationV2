@@ -6,9 +6,7 @@ const helpers = require('./../helper/helper');
 
     module.exports.getAllEmployee= (req,resp)=>{
         const selectParams = {
-            _id: 1,
-            name: 1,
-            email: 1
+            _id:0
         };
        Employee.getAll({},selectParams).then(employee=>{
         // console.log(employee);
@@ -32,9 +30,7 @@ const helpers = require('./../helper/helper');
         try {
             
             const selectParams = {
-                _id: 1,
-                name: 1,
-                email: 1
+               _id:0
             };
             // console.log("1");
             Employee.get({ $or: [{ email: email }]},selectParams).then(existing=>{

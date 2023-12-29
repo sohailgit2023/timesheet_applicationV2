@@ -6,9 +6,9 @@ const helpers = require('./../helper/helper');
 
     module.exports.getAllClient= (req,resp)=>{
         const selectParams = {
-            _id: 1,
+            clientId:1,
             name: 1,
-            email: 1
+           
         };
        Client.getAll({},selectParams).then(client=>{
         // console.log(employee);
@@ -28,7 +28,7 @@ module.exports.registerClient = (req, resp, postData) => {
     try {
 
         const selectParams = {
-            _id: 1,
+            clientId:1,
             name: 1,
         };
         // console.log("1");
