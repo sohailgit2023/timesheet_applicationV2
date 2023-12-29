@@ -16,7 +16,7 @@ const clientSchema = new mongoose.Schema({
         required: true,
     },
 
-});
+},{versionKey:false});
 
 clientModel = mongoose.model("clients", clientSchema);
 module.exports=clientSchema;
