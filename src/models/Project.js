@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const projectSchema = new mongoose.Schema({
     projectId:{
         unique:true,
-        type:String,
+        type:Number,
         required:true
     },
     name: {
