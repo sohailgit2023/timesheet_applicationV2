@@ -32,5 +32,8 @@ module.exports.success = (resp, data = null) => {
 };
 
 const addHeaders = (resp) => {
+    resp.header('Access-Control-Allow-Origin', "*");
+    resp.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
+    resp.header('Access-Control-Allow-Headers', 'Content-Type');
     return resp.setHeader('Content-Type', 'application/json');
 }
