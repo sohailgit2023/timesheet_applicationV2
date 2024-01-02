@@ -16,12 +16,12 @@ const projectSchema = new mongoose.Schema({
     },
     notes: {
         type:String,
-        default:null,
+        default:"",
         
     },
     descriptions: {
         type:String,
-        default:null,
+        default:"",
     },
 
 });
@@ -38,14 +38,22 @@ class Project {
                 reject(error);
             }
 
-            newProject.save((obj) => {
-                if (obj) {
-                    resolve(obj);
+            // newProject.save((obj) => {
+            //     if (obj) {
+            //         resolve(obj);
+            //     }
+            //     else {
+            //         resolve();
+            //     }
+            // });
+            newProject.save().then(docs=>{
+                if(docs){
+                    resolve(docs)
                 }
-                else {
-                    resolve();
+                else{
+                    resolve()
                 }
-            });
+            })
         });
     }
 
@@ -95,22 +103,25 @@ class Project {
 
     static findAndUpdate (conditions, updateData, options) {
         return new Promise((resolve, reject) => {
-            projectModel.findOneAndUpdate(conditions, updateData, options, (err, docs) => {
-                if (docs) {
-                    resolve(docs);
-                }
-                else {
-                    resolve();
-                }
-            });
+            try {
+                projectModel.findOneAndUpdate(conditions, updateData, options).then((docs,err)=>{
+                    if(docs){
+                        resolve(docs)
+                    } else{
+                        reject(err)
+                    }
+                })
+            } catch (error) {
+               console.log(error);
+            }
         });
     }
 
     static aggregation (pipeline) {
         return new Promise((resolve, reject) => {
-            projectModel.aggregate(pipeline, (err, docs) => {
-                if (err) {
-                    reject(err);
+            projectModel.aggregate(pipeline).then((docs) => {
+                if (!docs) {
+                    resolve()
                 }
                 else {
                     resolve(docs);
@@ -119,18 +130,6 @@ class Project {
         });
     }
 
-    static update (conditions, updateData, options) {
-        return new Promise((resolve, reject) => {
-            projectModel.update(conditions, updateData, options, (err, docs) => {
-                if (docs) {
-                    resolve(docs);
-                }
-                else {
-                    reject(err);
-                }
-            });
-        });
-    }
 }
 
 

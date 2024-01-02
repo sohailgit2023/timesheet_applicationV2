@@ -21,13 +21,15 @@ module.exports.error = (resp, error = 'An unknown error occurred', statusCode = 
 };
 
 module.exports.success = (resp, data = null) => {
-    addHeaders(resp);
-    resp.statusCode = 200;
-    resp.header('Access-Control-Allow-Origin', "*");
-    resp.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
-    resp.header('Access-Control-Allow-Headers', 'Content-Type');
+    //addHeaders(resp);
+    //,resp.statusCode = 200;
+    // resp.header('Access-Control-Allow-Origin', "*");
+    // resp.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
+    // resp.header('Access-Control-Allow-Headers', 'Content-Type');
    
-//    resp.writeHead(200, { 'Content-Type': 'application/json' });
+  resp.writeHead(200, { 'Content-Type': 'application/json',
+  'Access-Control-Allow-Origin' : '*',
+  'Access-Control-Allow-Methods': 'GET,PUT,POST,DELETE'});
     
     resp.end(JSON.stringify({
         data

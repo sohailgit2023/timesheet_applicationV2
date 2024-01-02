@@ -4,7 +4,8 @@ const http = require('http');
 const postData = require('./helper/postData')
 const Employee = require('./models/Employee')
 const EmployeeController = require('./controller/employeeController');
-const ClientController = require('./controller/clientController')
+const ClientController = require('./controller/clientController');
+const ProjectController=require('./controller/projectController')
 const { log } = require('console');
 
 const server = http.createServer((req, resp) => {
@@ -95,6 +96,37 @@ const server = http.createServer((req, resp) => {
     try {
       console.log("2");
       ClientController.deleteClient(req, resp, clientId)
+
+    } catch (error) {
+      console.log(error);
+    }
+  }
+  else if (path === '/project' && method === 'GET') {
+    // const { employeeId, fName, lName, email, gender, leadId } = req.body;
+   // projectController.getAllClient(req, resp)
+   ProjectController.getAllProject(req,resp)
+  }
+  else if (path === '/addproject' && method === 'POST') {
+
+    try {
+      postData.getPostData(req).then(formdata => {
+        ProjectController.registerProject(req, resp, formdata);
+      })
+
+    } catch (error) {
+      console.log(error);
+    }
+  }
+  else if (path.match( /^\/updateProject\/([0-9]+)$/) && method === 'PUT') {
+    console.log("update project");
+    
+    const param = path.split("/")
+    console.log(param);
+    const projectId = parseInt(param[2])
+    try {
+      postData.getPostData(req).then(formdata => {
+       ProjectController.updateProject(req,resp,projectId,formdata)
+      })
 
     } catch (error) {
       console.log(error);
