@@ -26,8 +26,7 @@ module.exports.success = (resp, data = null) => {
     resp.statusCode = 200;
 //    resp.writeHead(200, { 'Content-Type': 'application/json' });
     
-    resp.end(JSON.stringify({
-        status: 'success',
+    resp.end(JSON.parse({
         data
     }, null, 3));
 };
