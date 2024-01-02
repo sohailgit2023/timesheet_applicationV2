@@ -22,8 +22,11 @@ module.exports.error = (resp, error = 'An unknown error occurred', statusCode = 
 
 module.exports.success = (resp, data = null) => {
     addHeaders(resp);
-
     resp.statusCode = 200;
+    resp.header('Access-Control-Allow-Origin', "*");
+    resp.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
+    resp.header('Access-Control-Allow-Headers', 'Content-Type');
+   
 //    resp.writeHead(200, { 'Content-Type': 'application/json' });
     
     resp.end(JSON.stringify({
@@ -32,8 +35,6 @@ module.exports.success = (resp, data = null) => {
 };
 
 const addHeaders = (resp) => {
-    resp.header('Access-Control-Allow-Origin', "*");
-    resp.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
-    resp.header('Access-Control-Allow-Headers', 'Content-Type');
+    
     return resp.setHeader('Content-Type', 'application/json');
 }
