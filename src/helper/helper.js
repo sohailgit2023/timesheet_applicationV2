@@ -23,7 +23,7 @@ module.exports.error = (resp, error = 'An unknown error occurred', statusCode = 
 module.exports.success = (resp, data = null) => {
   resp.writeHead(200, { 'Content-Type': 'application/json',
   'Access-Control-Allow-Origin' : '*',
-  'Access-Control-Allow-Methods': 'GET, POST, DELETE, PUT, PATCH, OPTIONS'});
+  'Access-Control-Allow-Methods': 'GET, POST, DELETE, PUT, PATCH'});
     
     resp.end(JSON.stringify({
         data

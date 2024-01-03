@@ -16,15 +16,15 @@ const server = http.createServer((req, resp) => {
   // 'Access-Control-Allow-Origin' : '*',
   // 'Access-Control-Allow-Methods': 'GET,PUT,POST,DELETE'});
   resp.setHeader("Access-Control-Allow-Origin", "*"); // Required CORS header
-  resp.setHeader("Access-Control-Allow-Methods", "GET, POST, DELETE, PUT, PATCH, OPTIONS"); // Required CORS header
+  resp.setHeader("Access-Control-Allow-Methods", "GET, POST, DELETE, PUT, PATCH"); // Required CORS header
   resp.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept"); 
-  resp.writeHead(200);
+ // resp.writeHead(200);
   const method = req.method
-  // if (method === "OPTIONS") {
-  //   resp.writeHead(200);
-  //   resp.end();
-  //   return;
-  // }
+  if (method === "OPTIONS") {
+    resp.writeHead(200);
+   // resp.end();
+    return;
+  }
   console.log(path === '/updateClient/:clientId' && (method === 'PUT'||method === 'POST' ));
 
   if (path === '/' || path === '/employee' && method === 'GET') {
