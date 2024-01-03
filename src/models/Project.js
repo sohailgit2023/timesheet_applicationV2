@@ -26,8 +26,8 @@ const projectSchema = new mongoose.Schema({
 
 });
 
- projectModel= mongoose.model("projects", projectSchema);
-
+const projectModel= mongoose.model("projects", projectSchema);
+module.exports=projectModel
 class Project {
     static create (data) {
         const newProject = projectModel(data);
@@ -37,15 +37,6 @@ class Project {
             if (error) {
                 reject(error);
             }
-
-            // newProject.save((obj) => {
-            //     if (obj) {
-            //         resolve(obj);
-            //     }
-            //     else {
-            //         resolve();
-            //     }
-            // });
             newProject.save().then(docs=>{
                 if(docs){
                     resolve(docs)

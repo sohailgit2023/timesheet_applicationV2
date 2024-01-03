@@ -34,7 +34,7 @@ const employeeSchema = new mongoose.Schema({
         required:true
     },
 },{versionKey:false});
-employeeModel = mongoose.model("employees", employeeSchema);
+const employeeModel = mongoose.model("employees", employeeSchema);
 module.exports=employeeSchema;
 class Employee{
 

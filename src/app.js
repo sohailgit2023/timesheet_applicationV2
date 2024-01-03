@@ -6,11 +6,16 @@ const Employee = require('./models/Employee')
 const EmployeeController = require('./controller/employeeController');
 const ClientController = require('./controller/clientController');
 const ProjectController=require('./controller/projectController')
+const ChargeActivityController=require('./controller/chargeActivityController')
 const { log } = require('console');
 
 const server = http.createServer((req, resp) => {
   console.log(req.url)
   const path = req.url
+  resp.writeHead(200, { 'Content-Type': 'application/json',
+  'Access-Control-Allow-Origin' : '*',
+  'Access-Control-Allow-Methods': 'GET,PUT,POST,DELETE'});
+    
  
   const method = req.method
   console.log(path === '/updateClient/:clientId' && (method === 'PUT'||method === 'POST' ));
@@ -127,6 +132,48 @@ const server = http.createServer((req, resp) => {
       postData.getPostData(req).then(formdata => {
        ProjectController.updateProject(req,resp,projectId,formdata)
       })
+
+    } catch (error) {
+      console.log(error);
+    }
+  }
+  else if (path === '/chargeactivity' && method === 'GET') {
+    // const { employeeId, fName, lName, email, gender, leadId } = req.body;
+    ChargeActivityController.getAllChargeActivity(req, resp)
+  }
+  else if (path === '/addchargeactivity' && method === 'POST') {
+log("activity")
+    try {
+      postData.getPostData(req).then(formdata => {
+        ChargeActivityController.registerActivity(req, resp, formdata);
+      })
+
+    } catch (error) {
+      console.log(error);
+    }
+  }
+  else if (path.match( /^\/updateachargeactivity\/([0-9]+)$/) && method === 'PUT') {
+    console.log("update client");
+    
+    const param = path.split("/")
+    console.log(param);
+    const chargeActivityId = parseInt(param[2])
+    try {
+      postData.getPostData(req).then(formdata => {
+        // ClientController.updateClient(req, resp, clientId, formdata);
+        ChargeActivityController.updateChargeActivity(req,resp,chargeActivityId,formdata)
+      })
+
+    } catch (error) {
+      console.log(error);
+    }
+  }
+  else if (path.match( /^\/deletechargeactivity\/([0-9]+)$/)&& method === 'DELETE') {
+   
+    const param = path.split("/")
+    const chargeActivityId = parseInt(param[2])
+    try {
+     ChargeActivityController.deleteChargeActivity(req,resp,chargeActivityId)
 
     } catch (error) {
       console.log(error);
