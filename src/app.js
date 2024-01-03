@@ -1,7 +1,6 @@
 require('dotenv').config();
 require('./db/config')
 const http = require('http');
-const cors=require('cors')
 const postData = require('./helper/postData')
 const Employee = require('./models/Employee')
 const EmployeeController = require('./controller/employeeController');
@@ -12,19 +11,18 @@ const { log } = require('console');
 
 const server = http.createServer((req, resp) => {
   //console.log(req.url)
+  const origin = req.headers.origin || '*';
+  resp.setHeader('Access-Control-Allow-Origin', origin);
+  resp.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+  resp.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+ 
   const path = req.url
-  const headers = {
-    'Access-Control-Allow-Origin': '*', /* @dev First, read about security */
-    'Access-Control-Allow-Methods': 'OPTIONS, POST, GET,DELETE, PUT, PATCH',
-  };
-  resp.writeHead(204, headers);
-
   const method = req.method
-//   if (method === "OPTIONS") {
-//     resp.writeHead(200);
-//    // resp.end();
-//     return;
-//   }
+  if (method === 'OPTIONS') {
+     resp.writeHead(200);
+     resp.end();
+     return;
+  }
   console.log(path === '/updateClient/:clientId' && (method === 'PUT'||method === 'POST' ));
 
   if (path === '/' || path === '/employee' && method === 'GET') {
