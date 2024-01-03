@@ -20,8 +20,8 @@ const server = http.createServer((req, resp) => {
   resp.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept"); // Required CORS header
   const method = req.method
   if (method === "OPTIONS") {
-    response.writeHead(200);
-    response.end();
+    resp.writeHead(200);
+    resp.end();
     return;
   }
   console.log(path === '/updateClient/:clientId' && (method === 'PUT'||method === 'POST' ));
