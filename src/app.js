@@ -10,7 +10,7 @@ const ChargeActivityController=require('./controller/chargeActivityController')
 const { log } = require('console');
 
 const server = http.createServer((req, resp) => {
-  console.log(req.url)
+  //console.log(req.url)
   const path = req.url
   // resp.writeHead(200, { 'Content-Type': 'application/json',
   // 'Access-Control-Allow-Origin' : '*',
@@ -73,7 +73,7 @@ const server = http.createServer((req, resp) => {
     ClientController.getAllClient(req, resp)
   }
   else if (path === '/addclient' && method === 'POST') {
-
+console.log(path);
     try {
       postData.getPostData(req).then(formdata => {
         ClientController.registerClient(req, resp, formdata);
