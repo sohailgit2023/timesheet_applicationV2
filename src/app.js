@@ -12,9 +12,9 @@ const { log } = require('console');
 const server = http.createServer((req, resp) => {
   console.log(req.url)
   const path = req.url
-  resp.writeHead(200, { 'Content-Type': 'application/json',
-  'Access-Control-Allow-Origin' : '*',
-  'Access-Control-Allow-Methods': 'GET,PUT,POST,DELETE'});
+  // resp.writeHead(200, { 'Content-Type': 'application/json',
+  // 'Access-Control-Allow-Origin' : '*',
+  // 'Access-Control-Allow-Methods': 'GET,PUT,POST,DELETE'});
     
  
   const method = req.method
