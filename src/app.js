@@ -23,8 +23,6 @@ const server = http.createServer((req, resp) => {
      resp.end();
      return;
   }
-  console.log(path === '/updateClient/:clientId' && (method === 'PUT'||method === 'POST' ));
-
   if (path === '/' || path === '/employee' && method === 'GET') {
     // const { employeeId, fName, lName, email, gender, leadId } = req.body;
     EmployeeController.getAllEmployee(req, resp)
