@@ -16,7 +16,7 @@ const server = http.createServer((req, resp) => {
   // 'Access-Control-Allow-Origin' : '*',
   // 'Access-Control-Allow-Methods': 'GET,PUT,POST,DELETE'});
   resp.setHeader("Access-Control-Allow-Origin", "*"); // Required CORS header
-  resp.setHeader("Access-Control-Allow-Methods", "GET, POST, DELETE, PUT, PATCH"); // Required CORS header
+  resp.setHeader("Access-Control-Allow-Methods", "GET, POST, DELETE, PUT, PATCH, OPTIONS"); // Required CORS header
   resp.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept"); // Required CORS header
   const method = req.method
   // if (method === "OPTIONS") {
