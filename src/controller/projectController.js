@@ -27,8 +27,10 @@ module.exports.getAllProject = (req, resp) => {
         {
             $project: {
                _id:0,
-               projectId:1,
+                projectId:1,
                 name:1,
+                notes:1,
+                descriptions:1,
                 "client_Info.clientId": 1,
                 "client_Info.name": 1,
             }
