@@ -23,7 +23,30 @@ const server = http.createServer((req, resp) => {
      resp.end();
      return;
   }
-  if (path === '/' || path === '/employee' && method === 'GET') {
+  if (path === '/'  && method === 'GET') {
+    // const { employeeId, fName, lName, email, gender, leadId } = req.body;
+    const URL=[
+      {path:"/employee",method:"GET"},
+      {path:"/addemployee",method:"POST"},
+      {path:"/updateEmployee/id",method:"PUT"},
+      {path:"/deleteEmployee/id",method:"DELETE"},
+      {path:"/client",method:"GET"},
+      {path:"/addclient",method:"POST"},
+      {path:"/updateClient/id",method:"PUT"},
+      {path:"/deleteClient/id",method:"DELETE"},
+      {path:"/project",method:"GET"},
+      {path:"/addproject",method:"POST"},
+      {path:"/updateProject/id",method:"PUT"},
+      {path:"/deleteProject/id",method:"DELETE"},
+      {path:"/chargeactivity",method:"GET"},
+      {path:"/addchargeactivity",method:"POST"},
+      {path:"/updateChargeActivity/id",method:"PUT"},
+      {path:"/deleteChargeActivity/id",method:"DELETE"},
+    
+    ]
+    resp.end(JSON.stringify(URL))
+  }
+  else if ( path === '/employee' && method === 'GET') {
     // const { employeeId, fName, lName, email, gender, leadId } = req.body;
     EmployeeController.getAllEmployee(req, resp)
   }
@@ -155,7 +178,7 @@ log("activity")
       console.log(error);
     }
   }
-  else if (path.match( /^\/updateachargeactivity\/([0-9]+)$/) && method === 'PUT') {
+  else if (path.match( /^\/updateChargeActivity\/([0-9]+)$/) && method === 'PUT') {
     console.log("update client");
     
     const param = path.split("/")
@@ -171,7 +194,7 @@ log("activity")
       console.log(error);
     }
   }
-  else if (path.match( /^\/deletechargeactivity\/([0-9]+)$/)&& method === 'DELETE') {
+  else if (path.match( /^\/deleteChargeActivity\/([0-9]+)$/)&& method === 'DELETE') {
    
     const param = path.split("/")
     const chargeActivityId = parseInt(param[2])
