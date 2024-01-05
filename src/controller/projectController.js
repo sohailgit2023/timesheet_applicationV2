@@ -132,6 +132,19 @@ module.exports.updateProject = (req, resp, param, postData) => {
     }
 }
 
+module.exports.deleteProject=(req,resp,param)=>{
+    Project.get({projectId:param}).then(project=>{
+        if (project) {
+            Project.remove({projectId:param}).then(result=>{
+                return helpers.success(resp,{message:"Delete Successfully"})
+            })
+        }
+        else{
+            return helpers.error(resp, 'Project not found', 404);
+        }
+    })
+}
+
 
 
 

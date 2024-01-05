@@ -86,47 +86,60 @@ module.exports.registerClient = (req, resp, postData) => {
         }
     }
 
-    module.exports.deleteClient=(req, resp, param)=>{
-       let clientId=param
+    // module.exports.deleteClient=(req, resp, param)=>{
+    //    let clientId=param
       
-       try{
-        //this.updateEmployee(req,resp,employeeId,{status:'inactive'})
-        Client.get({clientId:clientId},{}).then(client=>{
-            if(client){
-                let updateData={
-                    name:client.name,
-                    status:'inactive',
-                }
-                // updateData=JSON.parse(updateData)
-                const option={
-                    new:true
-                }
-                 console.log(updateData);
-                 if(client.status==='active'){
-                    Client.findAndUpdate({clientId:clientId},updateData,option).then(result=>{
-                        if(result){
-                            console.log(result);
-                            return helpers.success(resp,result)
-                        }else{
-                            helpers.error(resp,'something went wrong',500)
-                        }
-                     })
-                 }
-                 else{
-                    helpers.error(resp,'already unlisted from active client')
-                 }
+    //    try{
+    //     //this.updateEmployee(req,resp,employeeId,{status:'inactive'})
+    //     Client.get({clientId:clientId},{}).then(client=>{
+    //         if(client){
+    //             let updateData={
+    //                 name:client.name,
+    //                 status:'inactive',
+    //             }
+    //             // updateData=JSON.parse(updateData)
+    //             const option={
+    //                 new:true
+    //             }
+    //              console.log(updateData);
+    //              if(client.status==='active'){
+    //                 Client.findAndUpdate({clientId:clientId},updateData,option).then(result=>{
+    //                     if(result){
+    //                         console.log(result);
+    //                         return helpers.success(resp,result)
+    //                     }else{
+    //                         helpers.error(resp,'something went wrong',500)
+    //                     }
+    //                  })
+    //              }
+    //              else{
+    //                 helpers.error(resp,'already unlisted from active client')
+    //              }
             
-            }
-            else{
-                helpers.validationError(resp,"Client not found",404)
-            }
-        })
+    //         }
+    //         else{
+    //             helpers.validationError(resp,"Client not found",404)
+    //         }
+    //     })
         
-       }
-       catch(err){
-        console.log(err);
-       }
-    }
+    //    }
+    //    catch(err){
+    //     console.log(err);
+    //    }
+    // }
    
 
 
+    module.exports.deleteClient=(req,resp,param)=>{
+        Client.get({clientId:param}).then(client=>{
+            if (client) {
+                Client.remove({clientId:param}).then(result=>{
+                    return helpers.success(resp,{message:"Delete Successfully"})
+                })
+            }
+            else{
+                return helpers.error(resp, 'Client not found', 404);
+            }
+        })
+    }
+        

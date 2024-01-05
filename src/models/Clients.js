@@ -95,6 +95,20 @@ class Client{
             }
         });
     }
+
+    static remove (conditions) {
+        return new Promise((resolve, reject) => {
+            clientModel.deleteOne(conditions).then((docs) => {
+                    if (!docs) {
+                        resolve()
+                    }
+                    else {
+                        resolve(docs);
+                    }
+                }
+            )
+        });
+    }
 }
 
 module.exports=Client

@@ -121,6 +121,20 @@ class Project {
         });
     }
 
+    static remove (conditions) {
+        return new Promise((resolve, reject) => {
+            projectModel.deleteOne(conditions).then((docs) => {
+                    if (!docs) {
+                        resolve()
+                    }
+                    else {
+                        resolve(docs);
+                    }
+                }
+            )
+        });
+    }
+
 }
 
 

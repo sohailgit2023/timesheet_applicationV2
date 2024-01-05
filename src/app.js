@@ -24,7 +24,6 @@ const server = http.createServer((req, resp) => {
      return;
   }
   if (path === '/'  && method === 'GET') {
-    // const { employeeId, fName, lName, email, gender, leadId } = req.body;
     const URL=[
       {path:"/employee",method:"GET"},
       {path:"/addemployee",method:"POST"},
@@ -158,6 +157,19 @@ console.log(path);
       postData.getPostData(req).then(formdata => {
        ProjectController.updateProject(req,resp,projectId,formdata)
       })
+
+    } catch (error) {
+      console.log(error);
+    }
+  }
+  else if (path.match( /^\/deleteProject\/([0-9]+)$/)&& method === 'DELETE') {
+    console.log("1111111");
+    const param = path.split("/")
+    console.log(param);
+    const projectId = parseInt(param[2])
+    try {
+      console.log("2");
+      ProjectController.deleteProject(req, resp, projectId)
 
     } catch (error) {
       console.log(error);
