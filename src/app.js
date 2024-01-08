@@ -7,6 +7,7 @@ const EmployeeController = require('./controller/employeeController');
 const ClientController = require('./controller/clientController');
 const ProjectController = require('./controller/projectController')
 const ChargeActivityController = require('./controller/chargeActivityController')
+const TaskController=require('./controller/taskController')
 const { log } = require('console');
 
 const server = http.createServer((req, resp) => {
@@ -41,6 +42,10 @@ const server = http.createServer((req, resp) => {
       { path: "/addChargeActivity", method: "POST" },
       { path: "/updateChargeActivity/id", method: "PUT" },
       { path: "/deleteChargeActivity/id", method: "DELETE" },
+      { path: "/task", method: "GET" },
+      { path: "/addTask", method: "POST" },
+      { path: "/updateTask/id", method: "PUT" },
+      { path: "/deleteTask/id", method: "DELETE" },
 
     ]
     resp.end(JSON.stringify(URL))
@@ -212,6 +217,45 @@ const server = http.createServer((req, resp) => {
     const chargeActivityId = parseInt(param[2])
     try {
       ChargeActivityController.deleteChargeActivity(req, resp, chargeActivityId)
+
+    } catch (error) {
+      console.log(error);
+    }
+  }
+  else if (path === '/task' && method === 'GET') {
+    // const { employeeId, fName, lName, email, gender, leadId } = req.body;
+    TaskController.getAllTask(req, resp)
+  }
+  else if (path === '/addTask' && method === 'POST') {
+    try {
+      postData.getPostData(req).then(formdata => {
+        TaskController.registerTask(req, resp, formdata);
+      })
+
+    } catch (error) {
+      console.log(error);
+    }
+  }
+  else if (path.match(/^\/updateTask\/([0-9]+)$/) && method === 'PUT') {
+    const param = path.split("/")
+    console.log(param);
+    const taskId = parseInt(param[2])
+    try {
+      postData.getPostData(req).then(formdata => {
+        // ClientController.updateClient(req, resp, clientId, formdata);
+        TaskController.updateTask(req, resp, taskId, formdata)
+      })
+
+    } catch (error) {
+      console.log(error);
+    }
+  }
+  else if (path.match(/^\/deleteTask\/([0-9]+)$/) && method === 'DELETE') {
+
+    const param = path.split("/")
+    const taskId = parseInt(param[2])
+    try {
+      TaskController.deleteTask(req, resp, taskId)
 
     } catch (error) {
       console.log(error);
