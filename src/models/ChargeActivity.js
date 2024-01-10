@@ -32,7 +32,7 @@ const activityTypeSchema = new mongoose.Schema({
         default:null,
     },
 
-});
+},{versionKey:false});
 
  activityModel = mongoose.model("chargeactivitytype", activityTypeSchema);
  module.exports=activityModel

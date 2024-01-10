@@ -33,6 +33,7 @@ module.exports.getAllProject = (req, resp) => {
                 descriptions:1,
                 "client_Info.clientId": 1,
                 "client_Info.name": 1,
+                "client_Info.status": 1,
             }
         },
         {

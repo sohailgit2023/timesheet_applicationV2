@@ -4,6 +4,7 @@ const Project = require('./../models/Project')
 const Employee=require('./../models/Employee')
 const ChargeActivity=require('./../models/ChargeActivity')
 const Task=require('./../models/Task')
+const TimesheetSetting=require('./../models/Timesheetsetting')
 // const Project = require('./../models/Project');
 const helpers = require('./../helper/helper');
 
@@ -46,6 +47,8 @@ module.exports.getAllTask = (req, resp) => {
             $project: {
                 _id: 0,
                 taskId: 1,
+                startDate: {$dateToString:{format:"%Y-%m-%d",date:"$startDate"}},
+                endDate: {$dateToString:{format:"%Y-%m-%d",date:"$endDate"}},
                 "employee_Info.fName": 1,
                 "employee_Info.lName": 1,
                 "client_Info.name": 1,
@@ -55,8 +58,6 @@ module.exports.getAllTask = (req, resp) => {
                 task: 1,
                 estimatedHours: 1,
                 billable: 1,
-                startDate: 1,
-                endDate: 1,
                 notes: 1,
 
             }
@@ -113,10 +114,11 @@ module.exports.registerTask = (req, resp, postData) => {
             if (!employee) {
                 return helpers.error(resp,'Employee not found',404)
             }
-            Client.get({ clientId: clientId }).then(client => {
+            TimesheetSetting.get({$and:[{employeeId:employeeId},{ clientId: clientId }]}).then(client => {
                 if (!client) {
                     return helpers.error(resp,'Client not found',404)
                 }
+            
                 Project.get({ $and: [{ projectId: projectId }, { clientId: clientId }] }).then(project => {
                     if (!project) {
                         return helpers.error(resp,'Project not found',404)
@@ -125,7 +127,7 @@ module.exports.registerTask = (req, resp, postData) => {
                         $and: [{ projectId: projectId }, { chargeCode: chargeCode }, { activityType: activityType }, { task: task }]
                     }).then(chargeActivity => {
                         if (!chargeActivity) {
-                            return helpers.error(resp,'Activity not found',404)
+                            return helpers.error(resp,'Charge Activity not found',404)
                         }
                         taskModel.findOne({}, { taskId: 1 }).sort({ taskId: -1 }).limit(1).then(result => {
                             if (result) {

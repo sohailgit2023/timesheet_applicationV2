@@ -24,7 +24,7 @@ const projectSchema = new mongoose.Schema({
         default:"",
     },
 
-});
+},{versionKey:false});
 
 projectModel= mongoose.model("projects", projectSchema);
 module.exports=projectModel

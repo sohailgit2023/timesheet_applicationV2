@@ -52,7 +52,7 @@ const taskSchema = new mongoose.Schema({
         default:null,
     },
 
-});
+},{versionKey:false});
 
 taskModel = mongoose.model("tasks", taskSchema);
 

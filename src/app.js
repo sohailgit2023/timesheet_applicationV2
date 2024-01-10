@@ -8,7 +8,9 @@ const ClientController = require('./controller/clientController');
 const ProjectController = require('./controller/projectController')
 const ChargeActivityController = require('./controller/chargeActivityController')
 const TaskController=require('./controller/taskController')
+const TimesheetSettingController=require('./controller/timesheetSettingController')
 const { log } = require('console');
+const { getAllTimesheetSetting } = require('./controller/timesheetSettingController');
 
 const server = http.createServer((req, resp) => {
   //console.log(req.url)
@@ -46,7 +48,10 @@ const server = http.createServer((req, resp) => {
       { path: "/addTask", method: "POST" },
       { path: "/updateTask/id", method: "PUT" },
       { path: "/deleteTask/id", method: "DELETE" },
-
+      { path: "/timesheetsetting", method: "GET" },
+      { path: "/addTimesheetSetting", method: "POST" },
+      { path: "/updateTimesheetSetting/id", method: "PUT" },
+      { path: "/deleteTimesheetSetting/id", method: "DELETE" }
     ]
     resp.end(JSON.stringify(URL))
   }
@@ -256,6 +261,45 @@ const server = http.createServer((req, resp) => {
     const taskId = parseInt(param[2])
     try {
       TaskController.deleteTask(req, resp, taskId)
+
+    } catch (error) {
+      console.log(error);
+    }
+  }
+  else if (path === '/timesheetsetting' && method === 'GET') {
+    // const { employeeId, fName, lName, email, gender, leadId } = req.body;
+  TimesheetSettingController.getAllTimesheetSetting(req,resp)
+  }
+  else if (path === '/addTimesheetSetting' && method === 'POST') {
+    try {
+      postData.getPostData(req).then(formdata => {
+        TimesheetSettingController.registerTimesheetsetting(req, resp, formdata);
+      })
+
+    } catch (error) {
+      console.log(error);
+    }
+  }
+  else if (path.match(/^\/updateTimesheetSetting\/([0-9]+)$/) && method === 'PUT') {
+    const param = path.split("/")
+    console.log(param);
+    const timesheetId = parseInt(param[2])
+    try {
+      postData.getPostData(req).then(formdata => {
+        // ClientController.updateClient(req, resp, clientId, formdata);
+        TimesheetSettingController.updateTimesheetSetting(req, resp, timesheetId, formdata)
+      })
+
+    } catch (error) {
+      console.log(error);
+    }
+  }
+  else if (path.match(/^\/deleteTimesheetSetting\/([0-9]+)$/) && method === 'DELETE') {
+
+    const param = path.split("/")
+    const timesheetId = parseInt(param[2])
+    try {
+      TimesheetSettingController.deleteTimesheetSetting(req, resp, timesheetId)
 
     } catch (error) {
       console.log(error);

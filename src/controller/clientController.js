@@ -130,16 +130,46 @@ module.exports.registerClient = (req, resp, postData) => {
    
 
 
-    module.exports.deleteClient=(req,resp,param)=>{
-        Client.get({clientId:param}).then(client=>{
+    // module.exports.deleteClient=(req,resp,param)=>{
+    //     Client.get({clientId:param}).then(client=>{
+    //         if (client) {
+    //             Client.remove({clientId:param}).then(result=>{
+    //                 return helpers.success(resp,{message:"Delete Successfully"})
+    //             })
+    //         }
+    //         else{
+    //             return helpers.error(resp, 'Client not found', 404);
+    //         }
+    //     })
+    // }
+
+    module.exports.deleteClient = (req, resp, param) => {
+        Client.get({ clientId: param }).then(client => {
             if (client) {
-                Client.remove({clientId:param}).then(result=>{
-                    return helpers.success(resp,{message:"Delete Successfully"})
-                })
+                return Project.aggregation([
+                    { $match: { clientId: param } },
+                    { $group: { _id: null, count: { $sum: 1 } } },
+                ]);
+            } else {
+                throw new Error('Client not found');
             }
-            else{
-                return helpers.error(resp, 'Client not found', 404);
+        }).then(clientProjects => {
+            if (clientProjects.length > 0 && clientProjects[0].count > 0) {
+                throw new Error('This client is associated. Therefore, delete is not allowed.');
             }
-        })
-    }
+            return Client.remove({ clientId: param });
+        }).then(result => {
+            helpers.success(resp, { message: 'Delete Successfully' });
+        }).catch(error => {
+            if (error.message === 'Client not found') {
+                helpers.error(resp, error.message, 404);
+            }
+            else if (error.message === 'This client is associated. Therefore, delete is not allowed.') {
+                helpers.error(resp, error.message, 400);
+            } else {
+                console.log(error);
+                helpers.error(resp, 'Internal Server Error', 500);
+            }
+        });
+     };
         
