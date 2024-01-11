@@ -38,11 +38,9 @@ const helpers = require('./../helper/helper');
             };
             // console.log("1");
             Employee.get({ $or: [{ email: email }]},selectParams).then(existing=>{
-               
                 if(!existing){
                     Employee.get({employeeId:leadId}).then(lead=>{
                         if(lead){
-                           
                             let leadObject= new Object(lead);
                             employeeData.leadName=leadObject.fullName
                             employeeModel.findOne({},{employeeId:1}).sort({employeeId:-1}).limit(1).then(result=>{
@@ -75,6 +73,23 @@ const helpers = require('./../helper/helper');
                                                 
                                                
                                             })
+                                        })
+                                    }
+                                    else{
+                                        Employee.create(employeeData).then(employee=>{
+                                            const leadHistoryData={
+                                                employeeId:employeeData.employeeId,
+                                                leadName:leadObject.fullName,
+                                                leadId:leadId,
+                                               effectiveDate:new Date()
+                                                // leadId:leadId
+                                            }
+                                            if(employee){
+                                                LeadHistory(leadHistoryData).save().then(lead=>{
+                                                    return helpers.success(resp, employee);
+                                                })
+                                                // return helpers.success(resp, employee);
+                                            } 
                                         })
                                     }
                                  
