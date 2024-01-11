@@ -47,6 +47,7 @@ module.exports.getAllTimesheetSetting = (req, resp) => {
                 "employee_Info.fName": 1,
                 "employee_Info.lName": 1,
                 "client_Info.name": 1,
+                "client_Info.clientId": 1,
 
             }
         },

@@ -15,6 +15,10 @@ const employeeSchema = new mongoose.Schema({
         type:String,
         required: true,
     },
+    fullName: {
+        type:String,
+        required: true,
+    },
     email: {
         type:String,
         required: true,
@@ -23,6 +27,10 @@ const employeeSchema = new mongoose.Schema({
     gender: {
         type:String,
         required:true,
+    },
+    isLead:{
+        type:Boolean,
+        required:true
     },
     status: {
         type:String,
@@ -33,6 +41,10 @@ const employeeSchema = new mongoose.Schema({
         type:Number,
         required:true
     },
+    leadName:{
+        type:String,
+        required: true,
+    }
 },{versionKey:false});
 employeeModel = mongoose.model("employees", employeeSchema);
 module.exports=employeeSchema;
@@ -92,6 +104,18 @@ class Employee{
                 }
             }).catch((err) => {
                 console.log(err);
+            });
+        });
+    }
+    static aggregation (pipeline) {
+        return new Promise((resolve, reject) => {
+            employeeModel.aggregate(pipeline).then((docs) => {
+                if (!docs) {
+                    resolve()
+                }
+                else {
+                    resolve(docs);
+                }
             });
         });
     }

@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const Employee= require('./../models/Employee')
+const LeadHistory=require('./../models/LeadHistory')
 
 // const Project = require('./../models/Project');
 const helpers = require('./../helper/helper');
@@ -17,16 +18,19 @@ const helpers = require('./../helper/helper');
       
     }
     module.exports.registerEmployee=(req,resp,postData)=>{
-        let {fName, lName, email, gender, leadId}=postData
+        let {fName, lName, email, gender,leadId, isLead}=postData
         // console.log("asdfgnm,");
         const employeeData={
             employeeId:1000,
             fName:fName,
             lName:lName,
+            fullName:`${fName} ${lName}`,
             email:email,
             gender:gender,
+            isLead:isLead,
             leadId:leadId
         }
+        
         try {
             
             const selectParams = {
@@ -36,23 +40,69 @@ const helpers = require('./../helper/helper');
             Employee.get({ $or: [{ email: email }]},selectParams).then(existing=>{
                
                 if(!existing){
-                    
-                    employeeModel.findOne({},{employeeId:1}).sort({employeeId:-1}).limit(1).then(result=>{
-                        if(result){
-                            employeeData.employeeId=result.employeeId+1;
+                    Employee.get({employeeId:leadId}).then(lead=>{
+                        if(lead){
                            
-                            Employee.create(employeeData).then(employee=>{
-                                
-                                return helpers.success(resp, employee);
+                            let leadObject= new Object(lead);
+                            employeeData.leadName=leadObject.fullName
+                            employeeModel.findOne({},{employeeId:1}).sort({employeeId:-1}).limit(1).then(result=>{
+                                if(result){
+                                    employeeData.employeeId=result.employeeId+1;
+                                    if(!leadObject.isLead){
+                                        const option = {
+                                            new: true
+                                        }
+                                        const data={
+                                            $set: { 
+                                               isLead:true }
+                                        }
+                                        Employee.findAndUpdate({employeeId:leadId},data,option).then((Updated)=>{
+                                            Employee.create(employeeData).then(employee=>{
+                                                const leadHistoryData={
+                                                    employeeId:employeeData.employeeId,
+                                                    leadName:leadObject.fullName,
+                                                    leadId:leadId,
+                                                   effectiveDate:new Date()
+                                                    // leadId:leadId
+                                                }
+        
+                                                if(employee){
+                                                    LeadHistory(leadHistoryData).save().then(lead=>{
+                                                        return helpers.success(resp, employee);
+                                                    })
+                                                    // return helpers.success(resp, employee);
+                                                }
+                                                
+                                               
+                                            })
+                                        })
+                                    }
+                                 
+                                }
+                                else{
+                                    Employee.create(employeeData).then(employee=>{ 
+                                        const leadHistoryData={
+                                            employeeId:employeeData.employeeId,
+                                            leadName:leadObject.fullName,
+                                             leadId:leadId,
+                                           effectiveDate:new Date()
+                                            // leadId:leadId
+                                        }
+                                        if(employee){
+                                            LeadHistory(leadHistoryData).save().then(lead=>{
+                                                return helpers.success(resp, employee);
+                                            })
+                                            // return helpers.success(resp, employee);
+                                        }
+                                    })
+                                }
                             })
                         }
                         else{
-                            Employee.create(employeeData).then(employee=>{
-                               
-                                return helpers.success(resp, employee);
-                            })
+                            helpers.validationError(resp,'Lead not exist')
                         }
                     })
+                    
                    
                 }
                 else{
@@ -74,18 +124,28 @@ const helpers = require('./../helper/helper');
                     const option={
                         new:true
                     }
-                    Employee.findAndUpdate({employeeId:employeeId},postData,option).then(employee=>{
-                        if(employee){
-                            console.log(employee);
-                            return helpers.success(resp,employee)
-                        }
-                        else{
-                            return helpers.error(resp, 'Something went wrong');
-                        }
-                        
-                    }).catch(err=>{
-                        return helpers.error(resp, 'Something went wrong');
-                     });
+                    Employee.get({employeeId:leadId}).then(lead=>{
+                       if (lead) {
+                         let leadObject=new Object(lead)
+                         postData.leadName=leadObject.fullName
+                         Employee.findAndUpdate({employeeId:employeeId},postData,option).then(employee=>{
+                             if(employee){
+                                 console.log(employee);
+                                 return helpers.success(resp,employee)
+                             }
+                             else{
+                                 return helpers.error(resp, 'Something went wrong');
+                             }
+                             
+                         }).catch(err=>{
+                             return helpers.error(resp, 'Something went wrong');
+                          });
+                       }
+                       else{
+                        helpers.validationError(resp,'Lead not exist')
+                       }
+                    })
+                   
                 }
                 else{
                     return helpers.error(resp, 'Employee not found', 404);
@@ -99,6 +159,48 @@ const helpers = require('./../helper/helper');
             return helpers.error(resp, 'Server Error');
         }
     }
+    // module.exports.getAllEmployee = (req, resp) => {
+    //     const selectParams = {
+    //         _id: 0
+    //     };
+    //     //    Project.getAll({},selectParams).then(project=>{
+    //     //     // console.log(employee);
+    //     //     return helpers.success(resp, project);
+    //     //    }).catch(err=>{
+    //     //     console.log(err)
+    //     //    })
+    //     const pipeline = [
+    //         {
+    //             $lookup: {
+    //                 from: 'leads',
+    //                 localField: "employeeId",
+    //                 foreignField: "employeeId",
+    //                 as: "lead_Info"
+    //             }
+    //         },
+    //         {
+    //             $project: {
+    //                _id:0,
+    //                 "lead_Info.employeeId": 0,
+    //             }
+    //         },
+    //         {
+    //             $unwind: "$lead_Info"
+    //         },
+           
+    //     ]
+    //     Employee.aggregation(pipeline).then(employee => {
+    //         if (employee) {
+    //             return helpers.success(resp, employee);
+    //         }
+    //         else {
+    //             return helpers.error(resp, 'Something went wrong');
+    //         }
+    //     }).catch(err => {
+    //         console.log(err);
+    //     })
+    
+    // }
 
     module.exports.deleteEmployee=(req, resp, param)=>{
        let employeeId=param
@@ -113,7 +215,9 @@ const helpers = require('./../helper/helper');
                     email:employee.email,
                     gender:employee.gender,
                     status:'inactive',
-                    leadId:1001
+                    leadId:0,
+                    leadName:"",
+                    isLead:false
                 }
                 // updateData=JSON.parse(updateData)
                 const option={
@@ -123,7 +227,7 @@ const helpers = require('./../helper/helper');
                  if(employee.status==='active'){
                     Employee.findAndUpdate({employeeId:employeeId},updateData,option).then(result=>{
                         if(result){
-                            console.log(result);
+                            //console.log(result);
                             return helpers.success(resp,result)
                         }else{
                             helpers.error(resp,'something went wrong',500)
