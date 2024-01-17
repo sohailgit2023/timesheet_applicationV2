@@ -30,6 +30,10 @@ const taskSchema = new mongoose.Schema({
         type:Number,
         required:true
     },
+    consumedHours:{
+        type:Number,
+        default:0
+    },
     billable:{
         type:String,
         required:true
