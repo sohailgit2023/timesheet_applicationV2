@@ -2,6 +2,11 @@ const mongoose = require('mongoose');
 const { error } = require('../helper/helper');
 
 const timesheetSchema = new mongoose.Schema({
+    timesheetId:{
+        type:Number,
+        required:true,
+        unique:true
+    },
     employeeId:{
         type:Number,
         required:true
@@ -10,9 +15,27 @@ const timesheetSchema = new mongoose.Schema({
         type:Number,
         required:true
     },
-    week: {
-        type:String,
-        required: true,
+    leadId:{
+        type:Number,
+        required:true
+    },
+    updatedAt: {
+        type: Date,
+        required: true
+    },
+    weekRange: {
+        start: {
+            type: Date,
+            required: true
+        },
+        end: {
+            type: Date,
+            required: true
+        }
+    },
+    weeklyHours:{
+        type:Array,
+        required:true
     },
     totalHours:{
         type:Number,
@@ -28,12 +51,12 @@ const timesheetSchema = new mongoose.Schema({
     }
 
 },{versionKey:false});
-myTimesheetModel = mongoose.model("my_timesheets", timesheetSchema);
-module.exports=myTimesheetModel;
+mytimesheetModel = mongoose.model("my_timesheets", timesheetSchema);
+module.exports=mytimesheetModel;
 class Timesheet{
 
     static create (data) {
-        const newTimesheet = myTimesheetModel(data);
+        const newTimesheet = mytimesheetModel(data);
         return new Promise((resolve, reject) => {
             const error = newTimesheet.validateSync();
             if (error) {
@@ -54,7 +77,7 @@ class Timesheet{
 
     static getAll (conditions, selectParams) {
         return new Promise((resolve, reject) => {
-            const query = myTimesheetModel.find(conditions);
+            const query = mytimesheetModel.find(conditions);
             if (selectParams) {
                 query.select(selectParams);
             }
@@ -74,7 +97,7 @@ class Timesheet{
     }
     static get (conditions, selectParams) {
         return new Promise((resolve, reject) => {
-            const query = myTimesheetModel.findOne(conditions).select(selectParams);
+            const query = mytimesheetModel.findOne(conditions).select(selectParams);
             query.then((docs) => {
                // console.log(docs)
                      if (docs) {
@@ -90,7 +113,7 @@ class Timesheet{
     }
     static aggregation (pipeline) {
         return new Promise((resolve, reject) => {
-            myTimesheetModel.aggregate(pipeline).then((docs) => {
+            mytimesheetModel.aggregate(pipeline).then((docs) => {
                 if (!docs) {
                     resolve()
                 }
@@ -104,7 +127,7 @@ class Timesheet{
     static findAndUpdate (conditions, updateData, options) {
         return new Promise((resolve, reject) => {
             try {
-                myTimesheetModel.findOneAndUpdate(conditions, updateData, options).then((docs,err)=>{
+                mytimesheetModel.findOneAndUpdate(conditions, updateData, options).then((docs,err)=>{
                     if(docs){
                         resolve(docs)
                     } else{
@@ -114,6 +137,20 @@ class Timesheet{
             } catch (error) {
                console.log(error);
             }
+        });
+    }
+
+    static remove (conditions) {
+        return new Promise((resolve, reject) => {
+            mytimesheetModel.deleteOne(conditions).then((docs) => {
+                    if (!docs) {
+                        resolve()
+                    }
+                    else {
+                        resolve(docs);
+                    }
+                }
+            )
         });
     }
 }

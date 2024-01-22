@@ -28,25 +28,29 @@ module.exports.registerClient = (req, resp, postData) => {
         const selectParams = {
             _id:0
         };
-        // console.log("1");
-        clientModel.findOne({}, { clientId: 1 }).sort({ clientId: -1 }).limit(1).then(result => {
-            if (result) {
-                clientData.clientId = result.clientId + 1;
-
-                Client.create(clientData).then(client => {
-
-                    return helpers.success(resp, client);
+        Client.get({name:name}).then(existing=>{
+            if(!existing){
+                clientModel.findOne({}, { clientId: 1 }).sort({ clientId: -1 }).limit(1).then(result => {
+                    if (result) {
+                        clientData.clientId = result.clientId + 1;
+        
+                        Client.create(clientData).then(client => {
+        
+                            return helpers.success(resp, client);
+                        })
+                    }
+                    else {
+                        Client.create(clientData).then(client => {
+        
+                            return helpers.success(resp, client);
+                        })
+                    }
                 })
             }
-            else {
-                Client.create(clientData).then(client => {
-
-                    return helpers.success(resp, client);
-                })
+            else{
+                return helpers.error(resp, 'Client already exists');
             }
         })
-
-
     } catch (error) {
         helpers.error(resp)
     }

@@ -13,12 +13,6 @@ module.exports.getAllTimesheetSetting = (req, resp) => {
     const selectParams = {
         _id: 0
     };
-    //    Project.getAll({},selectParams).then(project=>{
-    //     // console.log(employee);
-    //     return helpers.success(resp, project);
-    //    }).catch(err=>{
-    //     console.log(err)
-    //    })
     const pipeline = [
         {
             $lookup: {
@@ -46,7 +40,11 @@ module.exports.getAllTimesheetSetting = (req, resp) => {
                 notes: 1,
                 "employee_Info.fName": 1,
                 "employee_Info.lName": 1,
+                "employee_Info.employeeId": 1,
+                "employee_Info.fullName": 1,
+                "employee_Info.status": 1,
                 "client_Info.name": 1,
+                "client_Info.status": 1,
                 "client_Info.clientId": 1,
 
             }
@@ -92,49 +90,52 @@ module.exports.registerTimesheetsetting = (req, resp, postData) => {
             const selectParams = {
                 _id: 0
             };
-            // console.log("1");
-            Employee.get({ employeeId: employeeId }).then(employee => {
-                if (!employee) {
-                    return helpers.error(resp,'Employee not found',404)
+
+            TimesheetSetting.get({$and:[{employeeId:employeeId},{clientId:clientId}]}).then(existing=>{
+                if(existing){
+                    return helpers.error(resp,'Record already exist',403)
                 }
-                Client.get({ clientId: clientId }).then(client => {
-                    if (!client) {
-                        return helpers.error(resp,'Client not found',404)
-                    }
-                   
-                    timesheetModel.findOne({}, { timesheetId: 1 }).sort({ timesheetId: -1 }).limit(1).then(result => {
-                        if (result) {
-                            timesheetData.timesheetId = result.timesheetId + 1;
-    
-                            TimesheetSetting.create(timesheetData).then(timesheet => {
-    
-                                return helpers.success(resp,{message:"Added Successfully"})
-                            })
+                else{
+                    Employee.get({ employeeId: employeeId }).then(employee => {
+                        if (!employee) {
+                            return helpers.error(resp,'Employee not found',404)
                         }
-                        else {
-                            TimesheetSetting.create(timesheetData).then(timesheet => {
-    
-                                return helpers.success(resp,{message:"Added Successfully"})
+                        Client.get({ clientId: clientId }).then(client => {
+                            if (!client) {
+                                return helpers.error(resp,'Client not found',404)
+                            }
+                           
+                            timesheetModel.findOne({}, { timesheetId: 1 }).sort({ timesheetId: -1 }).limit(1).then(result => {
+                                if (result) {
+                                    timesheetData.timesheetId = result.timesheetId + 1;
+            
+                                    TimesheetSetting.create(timesheetData).then(timesheet => {
+            
+                                        return helpers.success(resp,{message:"Added Successfully"})
+                                    })
+                                }
+                                else {
+                                    TimesheetSetting.create(timesheetData).then(timesheet => {
+            
+                                        return helpers.success(resp,{message:"Added Successfully"})
+                                    })
+                                }
                             })
-                        }
-                    })
-                }).catch(err => {
-                    resp.status(500).send({ error: "Server error" })
-                });
-            }).catch(err => {
-                resp.status(500).send({ error: "Server error" })
-            });
-    
-    
+                        }).catch(err => {
+                            resp.status(500).send({ error: "Server error" })
+                        });
+                    }).catch(err => {
+                        resp.status(500).send({ error: "Server error" })
+                    });
+                }
+            })
         } catch (error) {
             helpers.error(resp)
         }
     }
     else{
         return helpers.error(resp, 'Location not found', 404);
-    }
-    
-    
+    }    
 }
 
 module.exports.updateTimesheetSetting = (req, resp, param, postData) => {

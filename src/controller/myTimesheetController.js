@@ -1,161 +1,155 @@
 const mongoose = require('mongoose');
 const Employee= require('./../models/Employee')
 const LeadHistory=require('./../models/LeadHistory')
+const MyTimesheet=require('./../models/MyTimesheet')
+const Task=require('./../models/Task')
 
 // const Project = require('./../models/Project');
 const helpers = require('./../helper/helper');
 
-    module.exports.getAllEmployee= (req,resp)=>{
-        const selectParams = {
-            _id:0
-        };
-       Employee.getAll({},selectParams).then(employee=>{
-        // console.log(employee);
-        return helpers.success(resp, employee);
-       }).catch(err=>{
-        console.log(err)
-       })
+    // module.exports.getAllEmployee= (req,resp)=>{
+    //     const selectParams = {
+    //         _id:0
+    //     };
+    //    MyTimesheet.getAll({},selectParams).then(mytimesheet=>{
+    //     // console.log(employee);
+    //     return helpers.success(resp, mytimesheet);
+    //    }).catch(err=>{
+    //     console.log(err)
+    //    })
       
-    }
-    module.exports.registerEmployee=(req,resp,postData)=>{
-        let {fName, lName, email, gender,leadId, isLead}=postData
+    // }
+    module.exports.registerMyTimesheet=(req,resp,postData)=>{
+        let {employeeId,taskId,weekRange,weeklyHours,status,notes}=postData
         // console.log("asdfgnm,");
-        const employeeData={
-            employeeId:1000,
-            fName:fName,
-            lName:lName,
-            fullName:`${fName} ${lName}`,
-            email:email,
-            gender:gender,
-            isLead:isLead,
-            leadId:leadId
+        const TimesheetData={
+           timesheetId:5000,
+           employeeId:employeeId,
+           taskId:taskId,
+           date:new Date(),
+           weekRange:{
+            start:'',
+            end:''
+           },
+           weeklyHours:weeklyHours,
+           totalHours:0,
+           status:status,
+           notes:notes
+
+        }
+        function getWeekDates(date){
+            currentDate = new Date(date);
+            console.log(currentDate);
+            const dayOfWeek = currentDate.getDay();
+           
+            console.log(dayOfWeek);
+            console.log(currentDate.getDate());
+            const diff = currentDate.getDate()-dayOfWeek+(dayOfWeek===0?-6:0);
+            console.log(diff);
+            const startOfWeek = new Date(currentDate.setDate(diff));
+            const endOfWeek = new Date(currentDate.setDate(diff+6));
+            return{
+                start:startOfWeek.toISOString().split('T')[0],
+                end:endOfWeek.toISOString().split('T')[0]
+            };
         }
         try { 
             const selectParams = {
                _id:0
             };
+            const weekRanges = getWeekDates(weekRange);
+            TimesheetData.weekRange.start=weekRanges.start;
+            TimesheetData.weekRange.end=weekRanges.end
             // console.log("1");
-            Employee.get({ $or: [{ email: email }]},selectParams).then(existing=>{
+            MyTimesheet.get({$and:[{employeeId:employeeId},{taskId:taskId},{"weekRange.start":weekRanges.start}]}).then(existing=>{
                 if(!existing){
-                    Employee.get({employeeId:leadId}).then(lead=>{
-                        if(lead){
-                            let leadObject= new Object(lead);
-                            employeeData.leadName=leadObject.fullName
-                            employeeModel.findOne({},{employeeId:1}).sort({employeeId:-1}).limit(1).then(result=>{
-                                if(result){
-                                    employeeData.employeeId=result.employeeId+1;
-                                    if(!leadObject.isLead){
-                                        const option = {
-                                            new: true
-                                        }
-                                        const data={
-                                            $set: { 
-                                               isLead:true }
-                                        }
-                                        Employee.findAndUpdate({employeeId:leadId},data,option).then((Updated)=>{
-                                            Employee.create(employeeData).then(employee=>{
-                                                const leadHistoryData={
-                                                    employeeId:employeeData.employeeId,
-                                                    leadName:leadObject.fullName,
-                                                    leadId:leadId,
-                                                   effectiveDate:new Date()
-                                                    // leadId:leadId
-                                                }
-                                                if(employee){
-                                                    LeadHistory(leadHistoryData).save().then(lead=>{
-                                                        return helpers.success(resp, employee);
-                                                    })
-                                                    // return helpers.success(resp, employee);
-                                                }  
+                    Employee.get({ $or: [{ employeeId: employeeId }]},selectParams).then(existing=>{
+                        if(existing){
+                            const employee=new Object(existing);
+                            TimesheetData.leadId=employee.leadId;
+                            Task.get({taskId:taskId}).then(task=>{
+                                if(task){
+                                    let sum=0;
+                                    for (let i = 0; i < weeklyHours.length; i++ ) {
+                                        sum += weeklyHours[i];
+                                      }
+                                    TimesheetData.totalHours=sum
+                                    mytimesheetModel.findOne({}, { timesheetId: 1 }).sort({ timesheetId: -1 }).limit(1).then(result => {
+                                        if (result) {
+                                            TimesheetData.timesheetId = result.timesheetId + 1;
+                                            MyTimesheet.create(TimesheetData).then(timesheet => {  
+                                               if (timesheet) {
+                                                 return helpers.success(resp, timesheet);
+                                               }
+                                               else{
+                                                helpers.error(resp)
+                                               }
                                             })
-                                        })
-                                    }
-                                    else{
-                                        Employee.create(employeeData).then(employee=>{
-                                            const leadHistoryData={
-                                                employeeId:employeeData.employeeId,
-                                                leadName:leadObject.fullName,
-                                                leadId:leadId,
-                                               effectiveDate:new Date()
-                                                // leadId:leadId
-                                            }
-                                            if(employee){
-                                                LeadHistory(leadHistoryData).save().then(lead=>{
-                                                    return helpers.success(resp, employee);
-                                                })
-                                                // return helpers.success(resp, employee);
-                                            } 
-                                        })
-                                    }
-                                }
-                                else{
-                                    Employee.create(employeeData).then(employee=>{ 
-                                        const leadHistoryData={
-                                            employeeId:employeeData.employeeId,
-                                            leadName:leadObject.fullName,
-                                             leadId:leadId,
-                                           effectiveDate:new Date()
-                                            // leadId:leadId
                                         }
-                                        if(employee){
-                                            LeadHistory(leadHistoryData).save().then(lead=>{
-                                                return helpers.success(resp, employee);
+                                        else {
+                                            MyTimesheet.create(TimesheetData).then(timesheet => {
+                                                if (timesheet) {
+                                                 return helpers.success(resp, timesheet);
+                                               }
+                                               else{
+                                                helpers.error(resp)
+                                               }
                                             })
-                                            // return helpers.success(resp, employee);
                                         }
                                     })
                                 }
-                            })
+                                else{
+                                    helpers.validationError(resp,'Task not exist')
+                                }
+                            })  
                         }
                         else{
-                            helpers.validationError(resp,'Lead not exist')
+                           helpers.validationError(resp,'Employee not exist')
                         }
-                    })  
+                    }).catch(err=>{
+                        console.log(err);
+                    })
                 }
                 else{
-                   helpers.validationError(resp,'Employee already exist')
+                    return helpers.error(resp, 'Record already exist');
                 }
-            }).catch(err=>{
-                console.log(err);
             })
+           
         } catch (error) {
             helpers.error(resp)
         }
     }
 
-    module.exports.updateEmployee=(req, resp, param, postData)=>{
-        let employeeId=param
+    module.exports.updateMyTimesheet=(req, resp, param, postData)=>{
+        let timesheetId=param
         try {
-             Employee.get({employeeId:employeeId},{}).then(existing=>{
+             MyTimesheet.get({timesheetId:timesheetId},{}).then(existing=>{
                 if(existing){
                     const option={
                         new:true
                     }
-                    Employee.get({employeeId:leadId}).then(lead=>{
-                       if (lead) {
-                         let leadObject=new Object(lead)
-                         postData.leadName=leadObject.fullName
-                         Employee.findAndUpdate({employeeId:employeeId},postData,option).then(employee=>{
-                             if(employee){
-                                 console.log(employee);
-                                 return helpers.success(resp,employee)
-                             }
-                             else{
-                                 return helpers.error(resp, 'Something went wrong');
-                             }
-                             
-                         }).catch(err=>{
+                let timesheetObject=new Object(existing);
+                   if (timesheetObject.status==='draft') {
+                     MyTimesheet.findAndUpdate({timesheetId:timesheetId},postData,option).then(timesheet=>{
+                         if(timesheet){
+                             console.log(timesheet);
+                             return helpers.success(resp,timesheet)
+                         }
+                         else{
                              return helpers.error(resp, 'Something went wrong');
-                          });
-                       }
-                       else{
-                        helpers.validationError(resp,'Lead not exist')
-                       }
-                    })
+                         }
+                         
+                     }).catch(err=>{
+                         return helpers.error(resp, 'Something went wrong');
+                      });
+                   }
+                   else{
+                    return helpers.error(resp,'Timesheet status must be draft')
+                   }
                    
                 }
                 else{
-                    return helpers.error(resp, 'Employee not found', 404);
+                    return helpers.error(resp, 'Timesheet not found', 404);
                 }
              }).catch(err=>{
                 console.log(err);
@@ -166,89 +160,76 @@ const helpers = require('./../helper/helper');
             return helpers.error(resp, 'Server Error');
         }
     }
-    // module.exports.getAllEmployee = (req, resp) => {
-    //     const selectParams = {
-    //         _id: 0
-    //     };
-    //     //    Project.getAll({},selectParams).then(project=>{
-    //     //     // console.log(employee);
-    //     //     return helpers.success(resp, project);
-    //     //    }).catch(err=>{
-    //     //     console.log(err)
-    //     //    })
-    //     const pipeline = [
-    //         {
-    //             $lookup: {
-    //                 from: 'leads',
-    //                 localField: "employeeId",
-    //                 foreignField: "employeeId",
-    //                 as: "lead_Info"
-    //             }
-    //         },
-    //         {
-    //             $project: {
-    //                _id:0,
-    //                 "lead_Info.employeeId": 0,
-    //             }
-    //         },
-    //         {
-    //             $unwind: "$lead_Info"
-    //         },
+    module.exports.getAllMyTimesheet = (req, resp,employeeId) => {
+        const selectParams = {
+            _id: 0
+        };
+        //    Project.getAll({},selectParams).then(project=>{
+        //     // console.log(employee);
+        //     return helpers.success(resp, project);
+        //    }).catch(err=>{
+        //     console.log(err)
+        //    })
+        const pipeline = [
+            {
+                $lookup: {
+                    from: 'employees',
+                    localField: "employeeId",
+                    foreignField: "employeeId",
+                    as: "employee_Info"
+                },
+            },
+            {
+                $match:{
+                    $and:[
+                        { "employee_Info.employeeId":employeeId},
+                    ]
+                   
+                }
+            },
+            {
+                $lookup: {
+                    from: 'tasks',
+                    localField: "taskId",
+                    foreignField: "taskId",
+                    as: "task_Info"
+                },
+            },
+            {
+                $project: {
+                   _id:0,
+                }
+            },
+            {
+                $unwind: "$employee_Info"
+            },
+            {
+                $unwind: "$task_Info"
+            },
            
-    //     ]
-    //     Employee.aggregation(pipeline).then(employee => {
-    //         if (employee) {
-    //             return helpers.success(resp, employee);
-    //         }
-    //         else {
-    //             return helpers.error(resp, 'Something went wrong');
-    //         }
-    //     }).catch(err => {
-    //         console.log(err);
-    //     })
+        ]
+        MyTimesheet.aggregation(pipeline).then(timesheet => {
+            if (timesheet) {
+                return helpers.success(resp, timesheet);
+            }
+            else {
+                return helpers.error(resp, 'Something went wrong');
+            }
+        }).catch(err => {
+            console.log(err);
+        })
     
-    // }
+    }
 
-    module.exports.deleteEmployee=(req, resp, param)=>{
-       let employeeId=param
+    module.exports.deleteMyTimesheet=(req, resp, param)=>{
+       let timesheetId=param
       
        try{
         //this.updateEmployee(req,resp,employeeId,{status:'inactive'})
-        Employee.get({employeeId:employeeId},{}).then(employee=>{
-            if(employee){
-                let updateData={
-                    fName:employee.fName,
-                    lName:employee.lName,
-                    email:employee.email,
-                    gender:employee.gender,
-                    status:'inactive',
-                    leadId:0,
-                    leadName:"",
-                    isLead:false
-                }
-                // updateData=JSON.parse(updateData)
-                const option={
-                    new:true
-                }
-                 console.log(updateData);
-                 if(employee.status==='active'){
-                    Employee.findAndUpdate({employeeId:employeeId},updateData,option).then(result=>{
-                        if(result){
-                            //console.log(result);
-                            return helpers.success(resp,result)
-                        }else{
-                            helpers.error(resp,'something went wrong',500)
-                        }
-                     })
-                 }
-                 else{
-                    helpers.error(resp,'already unlisted from active employee')
-                 }
-            
-            }
-            else{
-                helpers.validationError(resp,"Employee not found",404)
-            }
+        MyTimesheet.get({timesheetId:timesheetId},{}).then(timesheetId=>{
+           MyTimesheet.remove({timesheetId:timesheetId}).then(result=>{
+            return helpers.success(resp,{message:"Delete Successfully"})
+           })
         })
         
        }

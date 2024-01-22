@@ -7,6 +7,7 @@ const clientSchema = new mongoose.Schema({
         required:true
     },
     name: {
+        unique:true,
         type:String,
         required: true,
     },

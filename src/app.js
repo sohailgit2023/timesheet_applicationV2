@@ -10,7 +10,8 @@ const ChargeActivityController = require('./controller/chargeActivityController'
 const TaskController=require('./controller/taskController')
 const TimesheetSettingController=require('./controller/timesheetSettingController')
 const { log } = require('console');
-const { getAllTimesheetSetting } = require('./controller/timesheetSettingController');
+const MyTimesheetController=require('./controller/myTimesheetController')
+const ApprovalController=require('./controller/approvalController')
 
 const server = http.createServer((req, resp) => {
   //console.log(req.url)
@@ -51,7 +52,14 @@ const server = http.createServer((req, resp) => {
       { path: "/timesheetsetting", method: "GET" },
       { path: "/addTimesheetSetting", method: "POST" },
       { path: "/updateTimesheetSetting/id", method: "PUT" },
-      { path: "/deleteTimesheetSetting/id", method: "DELETE" }
+      { path: "/deleteTimesheetSetting/id", method: "DELETE" },
+      { path: "/mytimesheet", method: "GET" },
+      { path: "/addMyTimesheet", method: "POST" },
+      { path: "/updateMyTimesheet/id", method: "PUT" },
+      { path: "/deleteMyTimesheet/id", method: "DELETE" },
+      { path: "/AdminApproval", method: "GET" },
+      { path: "/LeadApproval/leadId", method: "GET" },
+      { path: "/updateApproval/MyTimesheetId", method: "PUT" },
     ]
     resp.end(JSON.stringify(URL))
   }
@@ -300,6 +308,71 @@ const server = http.createServer((req, resp) => {
     const timesheetId = parseInt(param[2])
     try {
       TimesheetSettingController.deleteTimesheetSetting(req, resp, timesheetId)
+
+    } catch (error) {
+      console.log(error);
+    }
+  }
+  else if (path.match(/^\/mytimesheet\/([0-9]+)$/) && method === 'GET') {
+    // const { employeeId, fName, lName, email, gender, leadId } = req.body;
+    const param = path.split("/")
+    const employeeId = parseInt(param[2])
+  MyTimesheetController.getAllMyTimesheet(req,resp,employeeId)
+  }
+  else if (path === '/addMyTimesheet' && method === 'POST') {
+    console.log("------------------------");
+    try {
+      postData.getPostData(req).then(formdata => {
+        MyTimesheetController.registerMyTimesheet(req, resp, formdata);
+      })
+
+    } catch (error) {
+      console.log(error);
+    }
+  }
+  else if (path.match(/^\/updateMyTimesheet\/([0-9]+)$/) && method === 'PUT') {
+    const param = path.split("/")
+    console.log(param);
+    const timesheetId = parseInt(param[2])
+    try {
+      postData.getPostData(req).then(formdata => {
+        // ClientController.updateClient(req, resp, clientId, formdata);
+        MyTimesheetController.updateMyTimesheet(req, resp, timesheetId, formdata)
+      })
+
+    } catch (error) {
+      console.log(error);
+    }
+  }
+  else if (path.match(/^\/deleteMyTimesheet\/([0-9]+)$/) && method === 'DELETE') {
+
+    const param = path.split("/")
+    const timesheetId = parseInt(param[2])
+    try {
+      MyTimesheetController.deleteMyTimesheet(req, resp, timesheetId)
+
+    } catch (error) {
+      console.log(error);
+    }
+  }
+  else if (path === '/AdminApproval' && method === 'GET') {
+    // const { employeeId, fName, lName, email, gender, leadId } = req.body;
+  ApprovalController.getAllApprovalTimesheet(req,resp)
+  }
+  else if (path.match(/^\/LeadApproval\/([0-9]+)$/) && method === 'GET') {
+    // const { employeeId, fName, lName, email, gender, leadId } = req.body;
+    const param = path.split("/")
+    const leadId = parseInt(param[2])
+  ApprovalController.getAllApprovalTimesheetByLead(req,resp,leadId)
+  }
+  else if (path.match(/^\/updateApproval\/([0-9]+)$/) && method === 'PUT') {
+    const param = path.split("/")
+    console.log(param);
+    const timesheetId = parseInt(param[2])
+    try {
+      postData.getPostData(req).then(formdata => {
+        ApprovalController.updateStatusTimesheet(req, resp, timesheetId, formdata)
+      })
 
     } catch (error) {
       console.log(error);

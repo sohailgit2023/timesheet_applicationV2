@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const Project = require('./../models/Project')
 const ChargeActivity=require('./../models/ChargeActivity')
 const Common=require('./../helper/common')
+const Task=require('./../models/Task')
 
 // const Project = require('./../models/Project');
 const helpers = require('./../helper/helper');
@@ -84,22 +85,30 @@ module.exports.registerActivity = (req, resp, postData) => {
                     // console.log("1");
                     Project.get({ projectId: projectId }, {}).then(project => {
                         if (project) {
-                            activityModel.findOne({}, { chargeActivityId: 1 }).sort({ chargeActivityId: -1 }).limit(1).then(result => {
-                                if (result) {
-                                    chargeActivityData.chargeActivityId = result.chargeActivityId + 1;
-
-                                    ChargeActivity.create(chargeActivityData).then(activity => {
-
-                                        return helpers.success(resp, activity);
+                            ChargeActivity.get({$and:[{projectId:projectId},{chargeCode:chargeCode},{activityType:activityType},{task:task}]}).then(activity=>{
+                                if(!activity){
+                                    activityModel.findOne({}, { chargeActivityId: 1 }).sort({ chargeActivityId: -1 }).limit(1).then(result => {
+                                        if (result) {
+                                            chargeActivityData.chargeActivityId = result.chargeActivityId + 1;
+        
+                                            ChargeActivity.create(chargeActivityData).then(activity => {
+        
+                                                return helpers.success(resp, activity);
+                                            })
+                                        }
+                                        else {
+                                            ChargeActivity.create(chargeActivityData).then(activity => {
+        
+                                                return helpers.success(resp, activity);
+                                            })
+                                        }
                                     })
                                 }
-                                else {
-                                    ChargeActivity.create(chargeActivityData).then(activity => {
-
-                                        return helpers.success(resp, activity);
-                                    })
+                                else{
+                                    return helpers.error(resp, 'Charge activity already exist', 403);
                                 }
                             })
+                           
                         }
                         else {
                             return helpers.error(resp, 'Project not found', 404);
@@ -168,9 +177,25 @@ module.exports.updateChargeActivity = (req, resp, param, postData) => {
 module.exports.deleteChargeActivity=(req,resp,param)=>{
     ChargeActivity.get({chargeActivityId:param}).then(activity=>{
         if (activity) {
-            ChargeActivity.remove({chargeActivityId:param}).then(result=>{
-                return helpers.success(resp,{message:"Delete Successfully"})
+            const activityObject=new Object(activity);
+            const query={$and:[
+                {projectId:activityObject.projectId},
+                {chargeCode:activityObject.chargeCode},
+                {activityType:activityObject.activityType},
+                {task:activityObject.task}
+            ]
+            }
+            Task.get(query).then(task=>{
+                if(!task){
+                    ChargeActivity.remove({chargeActivityId:param}).then(result=>{
+                        return helpers.success(resp,{message:"Delete Successfully"})
+                    })
+                }
+                else{
+                    return helpers.error(resp, 'This activity is associated with task. Therefore, delete is not allowed.', 403);
+                }
             })
+            
         }
         else{
             return helpers.error(resp, 'Activity not found', 404);

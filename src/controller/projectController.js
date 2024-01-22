@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const Client = require('./../models/Clients')
 const Project = require('./../models/Project')
+const ChargeActivity=require('./../models/ChargeActivity')
 
 // const Project = require('./../models/Project');
 const helpers = require('./../helper/helper');
@@ -69,32 +70,36 @@ module.exports.registerProject = (req, resp, postData) => {
             _id: 0
         };
         // console.log("1");
-        Client.get({ clientId: clientId }, {}).then(client => {
-            if (client) {
-                projectModel.findOne({}, { projectId: 1 }).sort({ projectId: -1 }).limit(1).then(result => {
-                    if (result) {
-                        projectData.projectId = result.projectId + 1;
-
-                        Project.create(projectData).then(project => {
-
-                            return helpers.success(resp, project);
+        Project.get({$and:[{name:name},{clientId:clientId}]}).then(existing=>{
+            if(!existing){
+                Client.get({ clientId: clientId }, {}).then(client => {
+                    if (client) {
+                        projectModel.findOne({}, { projectId: 1 }).sort({ projectId: -1 }).limit(1).then(result => {
+                            if (result) {
+                                projectData.projectId = result.projectId + 1;
+        
+                                Project.create(projectData).then(project => {
+        
+                                    return helpers.success(resp, project);
+                                })
+                            }
+                            else {
+                                Project.create(projectData).then(project => {
+        
+                                    return helpers.success(resp, project);
+                                })
+                            }
                         })
                     }
                     else {
-                        Project.create(projectData).then(project => {
-
-                            return helpers.success(resp, project);
-                        })
+                        return helpers.error(resp, 'Client not found', 404);
                     }
-                })
+                })        
             }
-            else {
-                return helpers.error(resp, 'Client not found', 404);
+            else{
+                return helpers.error(resp, 'Project already exist', 404);
             }
         })
-
-
-
     } catch (error) {
         helpers.error(resp)
     }
@@ -136,9 +141,18 @@ module.exports.updateProject = (req, resp, param, postData) => {
 module.exports.deleteProject=(req,resp,param)=>{
     Project.get({projectId:param}).then(project=>{
         if (project) {
-            Project.remove({projectId:param}).then(result=>{
-                return helpers.success(resp,{message:"Delete Successfully"})
+            ChargeActivity.get({projectId:param}).then(activity=>{
+                if(!activity){
+                    Project.remove({projectId:param}).then(result=>{
+                        return helpers.success(resp,{message:"Delete Successfully"})
+                    })
+                }
+                else{
+                    return helpers.error(resp, 'This Project is associated with Charge Activity. Therefore, delete is not allowed.', 403);
+               
+                }
             })
+           
         }
         else{
             return helpers.error(resp, 'Project not found', 404);

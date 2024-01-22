@@ -47,11 +47,13 @@ module.exports.getAllTask = (req, resp) => {
             $project: {
                 _id: 0,
                 taskId: 1,
-                startDate: {$dateToString:{format:"%Y-%m-%d",date:"$startDate"}},
-                endDate: {$dateToString:{format:"%Y-%m-%d",date:"$endDate"}},
+                startDate: {$dateToString:{format:"%d-%m-%Y",date:"$startDate"}},
+                endDate: {$dateToString:{format:"%d-%m-%Y",date:"$endDate"}},
                 "employee_Info.fName": 1,
                 "employee_Info.lName": 1,
+                "employee_Info.fullName": 1,
                 "client_Info.name": 1,
+                "client_Info.status": 1,
                 "project_Info.name": 1,
                 chargeCode: 1,
                 activityType: 1,
@@ -110,52 +112,60 @@ module.exports.registerTask = (req, resp, postData) => {
             _id: 0
         };
         // console.log("1");
-        Employee.get({ employeeId: employeeId }).then(employee => {
-            if (!employee) {
-                return helpers.error(resp,'Employee not found',404)
-            }
-            TimesheetSetting.get({$and:[{employeeId:employeeId},{ clientId: clientId }]}).then(client => {
-                if (!client) {
-                    return helpers.error(resp,'Client not found',404)
-                }
-            
-                Project.get({ $and: [{ projectId: projectId }, { clientId: clientId }] }).then(project => {
-                    if (!project) {
-                        return helpers.error(resp,'Project not found',404)
+        Task.get({$and:[{employeeId:employeeId},{ projectId: projectId }, { chargeCode: chargeCode }, { activityType: activityType }, { task: task }]}).then(existing=>{
+            if(!existing){
+                Employee.get({ employeeId: employeeId }).then(employee => {
+                    if (!employee) {
+                        return helpers.error(resp,'Employee not found',404)
                     }
-                    ChargeActivity.get({
-                        $and: [{ projectId: projectId }, { chargeCode: chargeCode }, { activityType: activityType }, { task: task }]
-                    }).then(chargeActivity => {
-                        if (!chargeActivity) {
-                            return helpers.error(resp,'Charge Activity not found',404)
+                    TimesheetSetting.get({$and:[{employeeId:employeeId},{ clientId: clientId }]}).then(client => {
+                        if (!client) {
+                            return helpers.error(resp,'Client not found',404)
                         }
-                        taskModel.findOne({}, { taskId: 1 }).sort({ taskId: -1 }).limit(1).then(result => {
-                            if (result) {
-                                taskData.taskId = result.taskId + 1;
-        
-                                Task.create(taskData).then(task => {
-        
-                                    return helpers.success(resp, task);
-                                })
+                    
+                        Project.get({ $and: [{ projectId: projectId }, { clientId: clientId }] }).then(project => {
+                            if (!project) {
+                                return helpers.error(resp,'Project not found',404)
                             }
-                            else {
-                                Task.create(taskData).then(task => {
-        
-                                    return helpers.success(resp, task);
+                            ChargeActivity.get({
+                                $and: [{ projectId: projectId }, { chargeCode: chargeCode }, { activityType: activityType }, { task: task }]
+                            }).then(chargeActivity => {
+                                if (!chargeActivity) {
+                                    return helpers.error(resp,'Charge Activity not found',404)
+                                }
+                                taskModel.findOne({}, { taskId: 1 }).sort({ taskId: -1 }).limit(1).then(result => {
+                                    if (result) {
+                                        taskData.taskId = result.taskId + 1;
+                
+                                        Task.create(taskData).then(task => {
+                
+                                            return helpers.success(resp, task);
+                                        })
+                                    }
+                                    else {
+                                        Task.create(taskData).then(task => {
+                
+                                            return helpers.success(resp, task);
+                                        })
+                                    }
                                 })
-                            }
+                            })
+            
+                        }).catch(err => {
+                            resp.status(500).send({ error: "Server error" })
                         })
-                    })
-    
+                    }).catch(err => {
+                        resp.status(500).send({ error: "Server error" })
+                    });
                 }).catch(err => {
                     resp.status(500).send({ error: "Server error" })
-                })
-            }).catch(err => {
-                resp.status(500).send({ error: "Server error" })
-            });
-        }).catch(err => {
-            resp.status(500).send({ error: "Server error" })
-        });
+                });
+            }
+            else{
+                return helpers.error(resp,'Record already exist',403)
+            }
+        })
+        
 
 
     } catch (error) {
