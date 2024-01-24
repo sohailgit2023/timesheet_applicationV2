@@ -7,6 +7,64 @@ const Task=require('./../models/Task')
 // const Project = require('./../models/Project');
 const helpers = require('./../helper/helper');
 
+module.exports.getOneChargeActivity = (req, resp,chargeActivityId) => {
+    const selectParams = {
+        _id: 0
+    };
+   
+    const pipeline = [
+        {
+            $match:{chargeActivityId:chargeActivityId}
+        },
+        {
+            $lookup: {
+                from: 'projects',
+                localField: "projectId",
+                foreignField: "projectId",
+                as: "project_Info"
+            }
+        },
+        {
+            $lookup: {
+                from: 'clients',
+                localField: "project_Info.clientId",
+                foreignField: "clientId",
+                as: "client_Info"
+            }
+        },
+        {
+            $project: {
+               _id:0,
+               chargeActivityId:1,
+               chargeCode: 1,
+               activityType: 1,
+               task: 1,
+                "project_Info.projectId": 1,
+                "project_Info.name": 1,
+                "client_Info.clientId": 1,
+                "client_Info.name": 1,
+            }
+        },
+        {
+            $unwind: "$project_Info"
+        },
+        {
+            $unwind: "$client_Info"
+        },
+       
+    ]
+    ChargeActivity.aggregation(pipeline).then(activity => {
+        if (activity) {
+            return helpers.success(resp, activity);
+        }
+        else {
+            return helpers.error(resp, 'Something went wrong');
+        }
+    }).catch(err => {
+        console.log(err);
+    })
+
+}
 module.exports.getAllChargeActivity = (req, resp) => {
     const selectParams = {
         _id: 0

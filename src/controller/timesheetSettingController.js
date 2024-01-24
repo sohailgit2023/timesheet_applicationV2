@@ -9,6 +9,68 @@ const TimesheetSetting=require('./../models/Timesheetsetting')
 const helpers = require('./../helper/helper');
 const Common=require('./../helper/common')
 
+module.exports.getOneTimesheetSetting = (req, resp,employeeId) => {
+    const selectParams = {
+        _id: 0
+    };
+    const pipeline = [
+        {$match:{employeeId:employeeId}},
+        {
+            $lookup: {
+                from: 'employees',
+                localField: "employeeId",
+                foreignField: "employeeId",
+                as: "employee_Info"
+            }
+        },
+        {
+            $lookup: {
+                from: "clients",
+                localField: "clientId",
+                foreignField: "clientId",
+                as: "client_Info"
+            }
+        },
+        {
+            $project: {
+                _id: 0,
+                timesheetId: 1,
+                location:1,
+                startDate: {$dateToString:{format:"%Y-%m-%d",date:"$startDate"}},
+                endDate: {$dateToString:{format:"%Y-%m-%d",date:"$endDate"}},
+                notes: 1,
+                "employee_Info.fName": 1,
+                "employee_Info.lName": 1,
+                "employee_Info.employeeId": 1,
+                "employee_Info.fullName": 1,
+                "employee_Info.status": 1,
+                "client_Info.name": 1,
+                "client_Info.status": 1,
+                "client_Info.clientId": 1,
+
+            }
+        },
+
+        {
+            $unwind: "$employee_Info",
+        },
+        {
+            $unwind: "$client_Info"
+        },
+       
+    ]
+    TimesheetSetting.aggregation(pipeline).then(timesheet => {
+        if (timesheet) {
+            return helpers.success(resp, timesheet);
+        }
+        else {
+            return helpers.error(resp, 'Something went wrong');
+        }
+    }).catch(err => {
+        console.log(err);
+    })
+
+}
 module.exports.getAllTimesheetSetting = (req, resp) => {
     const selectParams = {
         _id: 0

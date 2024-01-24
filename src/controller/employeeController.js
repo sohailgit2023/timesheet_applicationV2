@@ -5,16 +5,77 @@ const LeadHistory=require('./../models/LeadHistory')
 // const Project = require('./../models/Project');
 const helpers = require('./../helper/helper');
 
+module.exports.getOneEmployee= (req,resp,leadId)=>{
+    const selectParams = {
+        _id:0
+    };
+    const pipeline = [
+        {
+            $match:{leadId:leadId},
+        },
+        {
+            $lookup: {
+                from: 'leads',
+                localField: "employeeId",
+                foreignField: "employeeId",
+                as: "lead_Info"
+            }
+        },
+        // {
+        //     $match:{"lead_Info.effectiveDate":{$lte:[]}}
+        // },
+        {
+            $project: {
+               _id:0,
+             
+            }
+        },
+        // {
+        //     $unwind: "$lead_Info"
+        // },
+    ];
+
+  Employee.aggregation(pipeline).then(employee=>{
+    if(employee){
+        return helpers.success(resp, employee);
+    }
+    else{
+        return helpers.error(resp,'Something went wrong');
+    }
+  })
+  
+}
     module.exports.getAllEmployee= (req,resp)=>{
         const selectParams = {
             _id:0
         };
-       Employee.getAll({},selectParams).then(employee=>{
-        // console.log(employee);
-        return helpers.success(resp, employee);
-       }).catch(err=>{
-        console.log(err)
-       })
+        const pipeline = [
+            {
+                $lookup: {
+                    from: 'leads',
+                    localField: "employeeId",
+                    foreignField: "employeeId",
+                    as: "lead_Info"
+                }
+            },
+            {
+                $project: {
+                   _id:0,
+                }
+            },
+            // {
+            //     $unwind: "$lead_Info"
+            // },
+           
+        ]
+      Employee.aggregation(pipeline).then(employee=>{
+        if(employee){
+            return helpers.success(resp, employee);
+        }
+        else{
+            return helpers.error(resp,'Something went wrong')
+        }
+      })
       
     }
     module.exports.registerEmployee=(req,resp,postData)=>{
@@ -131,22 +192,66 @@ const helpers = require('./../helper/helper');
                     const option={
                         new:true
                     }
-                    Employee.get({employeeId:leadId}).then(lead=>{
+                    Employee.get({employeeId:postData.leadId}).then(lead=>{
                        if (lead) {
                          let leadObject=new Object(lead)
                          postData.leadName=leadObject.fullName
-                         Employee.findAndUpdate({employeeId:employeeId},postData,option).then(employee=>{
-                             if(employee){
-                                 console.log(employee);
-                                 return helpers.success(resp,employee)
-                             }
-                             else{
-                                 return helpers.error(resp, 'Something went wrong');
-                             }
-                             
-                         }).catch(err=>{
-                             return helpers.error(resp, 'Something went wrong');
-                          });
+                         if(leadObject.isLead==='true'){
+                            Employee.findAndUpdate({employeeId:employeeId},postData,option).then(employee=>{
+                                const leadHistoryData={
+                                    employeeId:employeeId,
+                                    leadName:leadObject.fullName,
+                                     leadId:leadObject.employeeId,
+                                   effectiveDate:new Date()
+                                }
+                                if(employee){
+                                    LeadHistory(leadHistoryData).save().then(lead=>{
+                                        return helpers.success(resp, employee);
+                                    })
+                                }
+                                else{
+                                    return helpers.error(resp, 'Something went wrong');
+                                }
+                                
+                            }).catch(err=>{
+                                return helpers.error(resp, 'Something went wrong');
+                             });
+                         }
+                         else{
+                            Employee.findAndUpdate({employeeId:employeeId},postData,option).then(employee=>{
+                                const leadHistoryData={
+                                    employeeId:employeeId,
+                                    leadName:leadObject.fullName,
+                                     leadId:leadObject.employeeId,
+                                   effectiveDate:new Date()
+                                }
+                                if(employee){
+                                    Employee.findAndUpdate({employeeId:leadObject.employeeId},{isLead:true},option).then(leadUpdated=>{
+                                        if(leadUpdated){
+                                            LeadHistory(leadHistoryData).save().then(lead=>{
+                                                if(lead){
+                                                    return helpers.success(resp, employee);
+                                                }
+                                                else{
+                                                    return helpers.error(resp, 'Something went wrong');
+                                                }  
+                                            })
+                                        }
+                                        else{
+                                            return helpers.error(resp, 'Something went wrong');
+                                        }
+                                    })
+                                   
+                                }
+                                else{
+                                    return helpers.error(resp, 'Something went wrong');
+                                }
+                                
+                            }).catch(err=>{
+                                return helpers.error(resp, 'Something went wrong');
+                             });
+                         }
+                        
                        }
                        else{
                         helpers.validationError(resp,'Lead not exist')
@@ -166,48 +271,7 @@ const helpers = require('./../helper/helper');
             return helpers.error(resp, 'Server Error');
         }
     }
-    // module.exports.getAllEmployee = (req, resp) => {
-    //     const selectParams = {
-    //         _id: 0
-    //     };
-    //     //    Project.getAll({},selectParams).then(project=>{
-    //     //     // console.log(employee);
-    //     //     return helpers.success(resp, project);
-    //     //    }).catch(err=>{
-    //     //     console.log(err)
-    //     //    })
-    //     const pipeline = [
-    //         {
-    //             $lookup: {
-    //                 from: 'leads',
-    //                 localField: "employeeId",
-    //                 foreignField: "employeeId",
-    //                 as: "lead_Info"
-    //             }
-    //         },
-    //         {
-    //             $project: {
-    //                _id:0,
-    //                 "lead_Info.employeeId": 0,
-    //             }
-    //         },
-    //         {
-    //             $unwind: "$lead_Info"
-    //         },
-           
-    //     ]
-    //     Employee.aggregation(pipeline).then(employee => {
-    //         if (employee) {
-    //             return helpers.success(resp, employee);
-    //         }
-    //         else {
-    //             return helpers.error(resp, 'Something went wrong');
-    //         }
-    //     }).catch(err => {
-    //         console.log(err);
-    //     })
-    
-    // }
+   
 
     module.exports.deleteEmployee=(req, resp, param)=>{
        let employeeId=param

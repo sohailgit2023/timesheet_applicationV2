@@ -6,16 +6,56 @@ const ChargeActivity=require('./../models/ChargeActivity')
 // const Project = require('./../models/Project');
 const helpers = require('./../helper/helper');
 
+module.exports.getOneProject = (req, resp,projectId) => {
+    const selectParams = {
+        _id: 0
+    };
+    const pipeline = [
+        {
+           $match:{ projectId:projectId}
+        },
+        {
+            $lookup: {
+                from: 'clients',
+                localField: "clientId",
+                foreignField: "clientId",
+                as: "client_Info"
+            }
+        },
+        {
+            $project: {
+               _id:0,
+                projectId:1,
+                name:1,
+                notes:1,
+                descriptions:1,
+                "client_Info.clientId": 1,
+                "client_Info.name": 1,
+                "client_Info.status": 1,
+            }
+        },
+        {
+            $unwind: "$client_Info"
+        },
+       
+    ]
+    Project.aggregation(pipeline).then(project => {
+        if (project) {
+            return helpers.success(resp, project);
+        }
+        else {
+            return helpers.error(resp, 'Something went wrong');
+        }
+    }).catch(err => {
+        console.log(err);
+    })
+
+}
+
 module.exports.getAllProject = (req, resp) => {
     const selectParams = {
         _id: 0
     };
-    //    Project.getAll({},selectParams).then(project=>{
-    //     // console.log(employee);
-    //     return helpers.success(resp, project);
-    //    }).catch(err=>{
-    //     console.log(err)
-    //    })
     const pipeline = [
         {
             $lookup: {
@@ -97,7 +137,7 @@ module.exports.registerProject = (req, resp, postData) => {
                 })        
             }
             else{
-                return helpers.error(resp, 'Project already exist', 404);
+                return helpers.error(resp, 'Project already exist', 403);
             }
         })
     } catch (error) {
@@ -113,17 +153,26 @@ module.exports.updateProject = (req, resp, param, postData) => {
                 const option = {
                     new: true
                 }
-                Project.findAndUpdate({ projectId: projectId }, postData, option).then(project => {
-                    if (project) {
-                        return helpers.success(resp, project)
+                let projectObject=new Object(existing);
+                Project.get({$and:[{clientId:projectObject.clientId},{name:postData.name}]}).then(exsist=>{
+                    if(!exsist){
+                        Project.findAndUpdate({ projectId: projectId }, postData, option).then(project => {
+                            if (project) {
+                                return helpers.success(resp, project)
+                            }
+                            else {
+                                return helpers.error(resp, 'Something went wrong');
+                            }
+        
+                        }).catch(err => {
+                            return helpers.error(resp, 'Something went wrong');
+                        });
                     }
-                    else {
-                        return helpers.error(resp, 'Something went wrong');
+                    else{
+                        return helpers.error(resp, 'Project already exist', 403);
                     }
-
-                }).catch(err => {
-                    return helpers.error(resp, 'Something went wrong');
-                });
+                })
+               
             }
             else {
                 return helpers.error(resp, 'Project not found', 404);

@@ -8,16 +8,88 @@ const TimesheetSetting=require('./../models/Timesheetsetting')
 // const Project = require('./../models/Project');
 const helpers = require('./../helper/helper');
 
+module.exports.getOneTask = (req, resp,employeeId) => {
+    const selectParams = {
+        _id: 0
+    };
+    const pipeline = [
+        {
+            $match:{employeeId:employeeId}
+        },
+        {
+            $lookup: {
+                from: 'employees',
+                localField: "employeeId",
+                foreignField: "employeeId",
+                as: "employee_Info"
+            }
+        },
+        {
+            $lookup: {
+                from: "clients",
+                localField: "clientId",
+                foreignField: "clientId",
+                as: "client_Info"
+            }
+        },
+        {
+            $lookup: {
+                from: "projects",
+                localField: "projectId",
+                foreignField: "projectId",
+                as: "project_Info"
+            }
+        },
+        {
+            $project: {
+                _id: 0,
+                taskId: 1,
+                startDate: {$dateToString:{format:"%d-%m-%Y",date:"$startDate"}},
+                endDate: {$dateToString:{format:"%d-%m-%Y",date:"$endDate"}},
+                "employee_Info.fName": 1,
+                "employee_Info.lName": 1,
+                "employee_Info.fullName": 1,
+                "client_Info.name": 1,
+                "client_Info.status": 1,
+                "project_Info.name": 1,
+                chargeCode: 1,
+                activityType: 1,
+                task: 1,
+                estimatedHours: 1,
+                billable: 1,
+                notes: 1,
+
+            }
+        },
+
+        {
+            $unwind: "$employee_Info",
+        },
+        {
+            $unwind: "$client_Info"
+        },
+        {
+            $unwind: "$project_Info",
+        },
+       
+    ]
+    Task.aggregation(pipeline).then(task => {
+        if (task) {
+            return helpers.success(resp, task);
+        }
+        else {
+            return helpers.error(resp, 'Something went wrong');
+        }
+    }).catch(err => {
+        console.log(err);
+    })
+
+}
+
 module.exports.getAllTask = (req, resp) => {
     const selectParams = {
         _id: 0
     };
-    //    Project.getAll({},selectParams).then(project=>{
-    //     // console.log(employee);
-    //     return helpers.success(resp, project);
-    //    }).catch(err=>{
-    //     console.log(err)
-    //    })
     const pipeline = [
         {
             $lookup: {
@@ -88,6 +160,7 @@ module.exports.getAllTask = (req, resp) => {
     })
 
 }
+
 module.exports.registerTask = (req, resp, postData) => {
     const { employeeId, clientId, projectId, chargeCode, activityType, task, estimatedHours, startDate, endDate, billable, notes } = postData;
 

@@ -30,33 +30,39 @@ const server = http.createServer((req, resp) => {
   if (path === '/' && method === 'GET') {
     const URL = [
       { path: "/employee", method: "GET" },
+      { path: "/employee/leadId", method: "GET" },
       { path: "/addEmployee", method: "POST" },
-      { path: "/updateEmployee/id", method: "PUT" },
-      { path: "/deleteEmployee/id", method: "DELETE" },
+      { path: "/updateEmployee/employeeId", method: "PUT" },
+      { path: "/deleteEmployee/employeeId", method: "DELETE" },
       { path: "/client", method: "GET" },
+      { path: "/client/clientId", method: "GET" },
       { path: "/addClient", method: "POST" },
-      { path: "/updateClient/id", method: "PUT" },
-      { path: "/deleteClient/id", method: "DELETE" },
+      { path: "/updateClient/clientId", method: "PUT" },
+      { path: "/deleteClient/clientId", method: "DELETE" },
       { path: "/project", method: "GET" },
+      { path: "/project/projectId", method: "GET" },
       { path: "/addProject", method: "POST" },
-      { path: "/updateProject/id", method: "PUT" },
-      { path: "/deleteProject/id", method: "DELETE" },
+      { path: "/updateProject/projectId", method: "PUT" },
+      { path: "/deleteProject/projectId", method: "DELETE" },
       { path: "/chargeactivity", method: "GET" },
+      { path: "/chargeactivity/chargeactivityId", method: "GET" },
       { path: "/addChargeActivity", method: "POST" },
-      { path: "/updateChargeActivity/id", method: "PUT" },
-      { path: "/deleteChargeActivity/id", method: "DELETE" },
+      { path: "/updateChargeActivity/chargeactivityId", method: "PUT" },
+      { path: "/deleteChargeActivity/chargeactivityId", method: "DELETE" },
       { path: "/task", method: "GET" },
+      { path: "/task/Id", method: "GET" },
       { path: "/addTask", method: "POST" },
-      { path: "/updateTask/id", method: "PUT" },
-      { path: "/deleteTask/id", method: "DELETE" },
+      { path: "/updateTask/taskId", method: "PUT" },
+      { path: "/deleteTask/taskId", method: "DELETE" },
       { path: "/timesheetsetting", method: "GET" },
+      { path: "/timesheetsetting/employeeId", method: "GET" },
       { path: "/addTimesheetSetting", method: "POST" },
-      { path: "/updateTimesheetSetting/id", method: "PUT" },
-      { path: "/deleteTimesheetSetting/id", method: "DELETE" },
+      { path: "/updateTimesheetSetting/timesheetsettingId", method: "PUT" },
+      { path: "/deleteTimesheetSetting/timesheetsettingId", method: "DELETE" },
       { path: "/mytimesheet", method: "GET" },
       { path: "/addMyTimesheet", method: "POST" },
-      { path: "/updateMyTimesheet/id", method: "PUT" },
-      { path: "/deleteMyTimesheet/id", method: "DELETE" },
+      { path: "/updateMyTimesheet/MyTimesheetId", method: "PUT" },
+      { path: "/deleteMyTimesheet/MyTimesheetId", method: "DELETE" },
       { path: "/AdminApproval", method: "GET" },
       { path: "/LeadApproval/leadId", method: "GET" },
       { path: "/updateApproval/MyTimesheetId", method: "PUT" },
@@ -64,8 +70,12 @@ const server = http.createServer((req, resp) => {
     resp.end(JSON.stringify(URL))
   }
   else if (path === '/employee' && method === 'GET') {
-    // const { employeeId, fName, lName, email, gender, leadId } = req.body;
     EmployeeController.getAllEmployee(req, resp)
+  }
+  else if (path.match(/^\/employee\/([0-9]+)$/) && method === 'GET') {
+    const param = path.split("/")
+    const leadId = parseInt(param[2])
+    EmployeeController.getOneEmployee(req, resp,leadId)
   }
   else if (path === '/addEmployee' && method === 'POST') {
 
@@ -79,9 +89,7 @@ const server = http.createServer((req, resp) => {
     }
   }
   else if (path.match(/^\/updateEmployee\/([0-9]+)$/) && method === 'PUT') {
-    console.log("update");
     const param = path.split("/")
-    console.log(param);
     const employeeId = parseInt(param[2])
     try {
       postData.getPostData(req).then(formdata => {
@@ -93,12 +101,9 @@ const server = http.createServer((req, resp) => {
     }
   }
   else if (path.match(/^\/deleteEmployee\/([0-9]+)$/) && method === 'DELETE') {
-    console.log("1");
     const param = path.split("/")
-    console.log(param);
     const employeeId = parseInt(param[2])
     try {
-      console.log("2");
       EmployeeController.deleteEmployee(req, resp, employeeId)
 
     } catch (error) {
@@ -106,11 +111,14 @@ const server = http.createServer((req, resp) => {
     }
   }
   else if (path === '/client' && method === 'GET') {
-    // const { employeeId, fName, lName, email, gender, leadId } = req.body;
     ClientController.getAllClient(req, resp)
   }
+  else if (path.match(/^\/client\/([0-9]+)$/) && method === 'GET') {
+    const param = path.split("/")
+    const clientId = parseInt(param[2])
+    ClientController.getOneClient(req, resp,clientId)
+  }
   else if (path === '/addClient' && method === 'POST') {
-    console.log(path);
     try {
       postData.getPostData(req).then(formdata => {
         ClientController.registerClient(req, resp, formdata);
@@ -121,10 +129,7 @@ const server = http.createServer((req, resp) => {
     }
   }
   else if (path.match(/^\/updateClient\/([0-9]+)$/) && method === 'PUT') {
-    console.log("update client");
-
     const param = path.split("/")
-    console.log(param);
     const clientId = parseInt(param[2])
     try {
       postData.getPostData(req).then(formdata => {
@@ -150,9 +155,12 @@ const server = http.createServer((req, resp) => {
     }
   }
   else if (path === '/project' && method === 'GET') {
-    // const { employeeId, fName, lName, email, gender, leadId } = req.body;
-    // projectController.getAllClient(req, resp)
     ProjectController.getAllProject(req, resp)
+  }
+  else if (path.match(/^\/project\/([0-9]+)$/) && method === 'GET') {
+    const param = path.split("/")
+    const projectId = parseInt(param[2])
+    ProjectController.getOneProject(req, resp,projectId)
   }
   else if (path === '/addProject' && method === 'POST') {
 
@@ -166,8 +174,6 @@ const server = http.createServer((req, resp) => {
     }
   }
   else if (path.match(/^\/updateProject\/([0-9]+)$/) && method === 'PUT') {
-    console.log("update project");
-
     const param = path.split("/")
     console.log(param);
     const projectId = parseInt(param[2])
@@ -181,12 +187,10 @@ const server = http.createServer((req, resp) => {
     }
   }
   else if (path.match(/^\/deleteProject\/([0-9]+)$/) && method === 'DELETE') {
-    console.log("1111111");
     const param = path.split("/")
     console.log(param);
     const projectId = parseInt(param[2])
     try {
-      console.log("2");
       ProjectController.deleteProject(req, resp, projectId)
 
     } catch (error) {
@@ -194,8 +198,12 @@ const server = http.createServer((req, resp) => {
     }
   }
   else if (path === '/chargeactivity' && method === 'GET') {
-    // const { employeeId, fName, lName, email, gender, leadId } = req.body;
     ChargeActivityController.getAllChargeActivity(req, resp)
+  }
+  else if (path.match(/^\/chargeactivity\/([0-9]+)$/) && method === 'GET') {
+    const param = path.split("/")
+    const chargeActivityId = parseInt(param[2])
+    ChargeActivityController.getOneChargeActivity(req, resp,chargeActivityId)
   }
   else if (path === '/addChargeActivity' && method === 'POST') {
     log("activity")
@@ -209,14 +217,10 @@ const server = http.createServer((req, resp) => {
     }
   }
   else if (path.match(/^\/updateChargeActivity\/([0-9]+)$/) && method === 'PUT') {
-    console.log("update client");
-
     const param = path.split("/")
-    console.log(param);
     const chargeActivityId = parseInt(param[2])
     try {
       postData.getPostData(req).then(formdata => {
-        // ClientController.updateClient(req, resp, clientId, formdata);
         ChargeActivityController.updateChargeActivity(req, resp, chargeActivityId, formdata)
       })
 
@@ -225,7 +229,6 @@ const server = http.createServer((req, resp) => {
     }
   }
   else if (path.match(/^\/deleteChargeActivity\/([0-9]+)$/) && method === 'DELETE') {
-
     const param = path.split("/")
     const chargeActivityId = parseInt(param[2])
     try {
@@ -236,8 +239,12 @@ const server = http.createServer((req, resp) => {
     }
   }
   else if (path === '/task' && method === 'GET') {
-    // const { employeeId, fName, lName, email, gender, leadId } = req.body;
     TaskController.getAllTask(req, resp)
+  }
+  else if (path.match(/^\/task\/([0-9]+)$/) && method === 'GET') {
+    const param = path.split("/")
+    const employeeId = parseInt(param[2])
+    TaskController.getOneTask(req, resp,employeeId)
   }
   else if (path === '/addTask' && method === 'POST') {
     try {
@@ -278,6 +285,11 @@ const server = http.createServer((req, resp) => {
     // const { employeeId, fName, lName, email, gender, leadId } = req.body;
   TimesheetSettingController.getAllTimesheetSetting(req,resp)
   }
+  else if (path.match(/^\/timesheetsetting\/([0-9]+)$/) && method === 'GET') {
+    const param = path.split("/")
+    const employeeId = parseInt(param[2])
+    TimesheetSettingController.getOneTimesheetSetting(req, resp,employeeId)
+  }
   else if (path === '/addTimesheetSetting' && method === 'POST') {
     try {
       postData.getPostData(req).then(formdata => {
@@ -314,13 +326,17 @@ const server = http.createServer((req, resp) => {
     }
   }
   else if (path.match(/^\/mytimesheet\/([0-9]+)$/) && method === 'GET') {
-    // const { employeeId, fName, lName, email, gender, leadId } = req.body;
     const param = path.split("/")
     const employeeId = parseInt(param[2])
   MyTimesheetController.getAllMyTimesheet(req,resp,employeeId)
   }
+  else if (path.match(/^\/mytimesheet\/([0-9]+)\/([0-9]+)\/([0-9]+)\/([0-9]+)$/) && method === 'GET') {
+    let param = path.split("/")
+    const week=param.splice(3,3).join("/")
+    const employeeId = parseInt(param[2])
+    MyTimesheetController.getAllWeeklyMyTimesheet(req,resp,employeeId,week)
+  }
   else if (path === '/addMyTimesheet' && method === 'POST') {
-    console.log("------------------------");
     try {
       postData.getPostData(req).then(formdata => {
         MyTimesheetController.registerMyTimesheet(req, resp, formdata);
@@ -332,11 +348,9 @@ const server = http.createServer((req, resp) => {
   }
   else if (path.match(/^\/updateMyTimesheet\/([0-9]+)$/) && method === 'PUT') {
     const param = path.split("/")
-    console.log(param);
     const timesheetId = parseInt(param[2])
     try {
       postData.getPostData(req).then(formdata => {
-        // ClientController.updateClient(req, resp, clientId, formdata);
         MyTimesheetController.updateMyTimesheet(req, resp, timesheetId, formdata)
       })
 
@@ -345,7 +359,6 @@ const server = http.createServer((req, resp) => {
     }
   }
   else if (path.match(/^\/deleteMyTimesheet\/([0-9]+)$/) && method === 'DELETE') {
-
     const param = path.split("/")
     const timesheetId = parseInt(param[2])
     try {
@@ -356,18 +369,15 @@ const server = http.createServer((req, resp) => {
     }
   }
   else if (path === '/AdminApproval' && method === 'GET') {
-    // const { employeeId, fName, lName, email, gender, leadId } = req.body;
   ApprovalController.getAllApprovalTimesheet(req,resp)
   }
   else if (path.match(/^\/LeadApproval\/([0-9]+)$/) && method === 'GET') {
-    // const { employeeId, fName, lName, email, gender, leadId } = req.body;
     const param = path.split("/")
     const leadId = parseInt(param[2])
   ApprovalController.getAllApprovalTimesheetByLead(req,resp,leadId)
   }
   else if (path.match(/^\/updateApproval\/([0-9]+)$/) && method === 'PUT') {
     const param = path.split("/")
-    console.log(param);
     const timesheetId = parseInt(param[2])
     try {
       postData.getPostData(req).then(formdata => {

@@ -7,18 +7,119 @@ const Task=require('./../models/Task')
 // const Project = require('./../models/Project');
 const helpers = require('./../helper/helper');
 
-    // module.exports.getAllEmployee= (req,resp)=>{
-    //     const selectParams = {
-    //         _id:0
-    //     };
-    //    MyTimesheet.getAll({},selectParams).then(mytimesheet=>{
-    //     // console.log(employee);
-    //     return helpers.success(resp, mytimesheet);
-    //    }).catch(err=>{
-    //     console.log(err)
-    //    })
-      
-    // }
+
+module.exports.getAllMyTimesheet = (req, resp,employeeId) => {
+    const selectParams = {
+        _id: 0
+    };
+    const pipeline = [
+        {
+            $lookup: {
+                from: 'employees',
+                localField: "employeeId",
+                foreignField: "employeeId",
+                as: "employee_Info"
+            },
+        },
+        {
+            $match:{
+                $and:[
+                    { "employee_Info.employeeId":employeeId},
+                ]
+               
+            }
+        },
+        {
+            $lookup: {
+                from: 'tasks',
+                localField: "taskId",
+                foreignField: "taskId",
+                as: "task_Info"
+            },
+        },
+        {
+            $project: {
+               _id:0,
+              
+            }
+        },
+        {
+            $unwind: "$employee_Info"
+        },
+        {
+            $unwind: "$task_Info"
+        },
+       
+    ]
+    MyTimesheet.aggregation(pipeline).then(timesheet => {
+        if (timesheet) {
+            return helpers.success(resp, timesheet);
+        }
+        else {
+            return helpers.error(resp, 'Something went wrong');
+        }
+    }).catch(err => {
+        console.log(err);
+    })
+
+}
+
+module.exports.getAllWeeklyMyTimesheet = (req, resp,employeeId,week) => {
+    const selectParams = {
+        _id: 0
+    };
+    const pipeline = [
+        {
+            $lookup: {
+                from: 'employees',
+                localField: "employeeId",
+                foreignField: "employeeId",
+                as: "employee_Info"
+            },
+        },
+        {
+            $match:{
+                $and:[
+                    { "employee_Info.employeeId":employeeId},
+                    {"weekRange.start":week}
+                ]
+               
+            }
+        },
+        {
+            $lookup: {
+                from: 'tasks',
+                localField: "taskId",
+                foreignField: "taskId",
+                as: "task_Info"
+            },
+        },
+        {
+            $project: {
+               _id:0,
+              
+            }
+        },
+        {
+            $unwind: "$employee_Info"
+        },
+        {
+            $unwind: "$task_Info"
+        },
+       
+    ]
+    MyTimesheet.aggregation(pipeline).then(timesheet => {
+        if (timesheet) {
+            return helpers.success(resp, timesheet);
+        }
+        else {
+            return helpers.error(resp, 'Something went wrong');
+        }
+    }).catch(err => {
+        console.log(err);
+    })
+
+}
     module.exports.registerMyTimesheet=(req,resp,postData)=>{
         let {employeeId,taskId,weekRange,weeklyHours,status,notes}=postData
         // console.log("asdfgnm,");
@@ -26,14 +127,15 @@ const helpers = require('./../helper/helper');
            timesheetId:5000,
            employeeId:employeeId,
            taskId:taskId,
-           date:new Date(),
+           status:status,
            weekRange:{
             start:'',
-            end:''
+            end:'',
+            range:''
            },
            weeklyHours:weeklyHours,
            totalHours:0,
-           status:status,
+           statusUpdatedAt:status+" "+new Date().toLocaleString('en-IN','Asia/Kolkata'),
            notes:notes
 
         }
@@ -41,25 +143,40 @@ const helpers = require('./../helper/helper');
             currentDate = new Date(date);
             console.log(currentDate);
             const dayOfWeek = currentDate.getDay();
-           
             console.log(dayOfWeek);
             console.log(currentDate.getDate());
             const diff = currentDate.getDate()-dayOfWeek+(dayOfWeek===0?-6:0);
             console.log(diff);
             const startOfWeek = new Date(currentDate.setDate(diff));
             const endOfWeek = new Date(currentDate.setDate(diff+6));
+            startDateFormat=startOfWeek.toLocaleDateString('en-US',{
+                day:'2-digit',
+                month:'short',
+                year:'numeric'
+            });
+            endDateFormat=endOfWeek.toLocaleDateString('en-US',{
+                day:'2-digit',
+                month:'short',
+                year:'numeric'
+            });
             return{
-                start:startOfWeek.toISOString().split('T')[0],
-                end:endOfWeek.toISOString().split('T')[0]
+                startDate:startOfWeek.toLocaleString('en-IN','Asia/Kolkata').split(",").splice(0,1).join(" "),
+                endDate:endOfWeek.toLocaleString('en-IN','Asia/Kolkata').split(",").splice(0,1).join(" "),
+                start:startDateFormat,
+                end:endDateFormat
+                // start:startOfWeek.toDateString().split(" ").splice(1,3).join(" "),
+                // end:endOfWeek.toDateString().split(" ").splice(1,3).join(" ")
             };
         }
         try { 
+          
             const selectParams = {
                _id:0
             };
             const weekRanges = getWeekDates(weekRange);
-            TimesheetData.weekRange.start=weekRanges.start;
-            TimesheetData.weekRange.end=weekRanges.end
+            TimesheetData.weekRange.start=weekRanges.startDate;
+            TimesheetData.weekRange.end=weekRanges.endDate
+            TimesheetData.weekRange.range=weekRanges.start.toString()+" to "+weekRanges.end.toString()
             // console.log("1");
             MyTimesheet.get({$and:[{employeeId:employeeId},{taskId:taskId},{"weekRange.start":weekRanges.start}]}).then(existing=>{
                 if(!existing){
@@ -130,6 +247,7 @@ const helpers = require('./../helper/helper');
                     }
                 let timesheetObject=new Object(existing);
                    if (timesheetObject.status==='draft') {
+                    postData.statusUpdatedAt=postData.status+" "+new Date().toLocaleString('en-IN','Asia/Kolkata');
                      MyTimesheet.findAndUpdate({timesheetId:timesheetId},postData,option).then(timesheet=>{
                          if(timesheet){
                              console.log(timesheet);
@@ -160,66 +278,7 @@ const helpers = require('./../helper/helper');
             return helpers.error(resp, 'Server Error');
         }
     }
-    module.exports.getAllMyTimesheet = (req, resp,employeeId) => {
-        const selectParams = {
-            _id: 0
-        };
-        //    Project.getAll({},selectParams).then(project=>{
-        //     // console.log(employee);
-        //     return helpers.success(resp, project);
-        //    }).catch(err=>{
-        //     console.log(err)
-        //    })
-        const pipeline = [
-            {
-                $lookup: {
-                    from: 'employees',
-                    localField: "employeeId",
-                    foreignField: "employeeId",
-                    as: "employee_Info"
-                },
-            },
-            {
-                $match:{
-                    $and:[
-                        { "employee_Info.employeeId":employeeId},
-                    ]
-                   
-                }
-            },
-            {
-                $lookup: {
-                    from: 'tasks',
-                    localField: "taskId",
-                    foreignField: "taskId",
-                    as: "task_Info"
-                },
-            },
-            {
-                $project: {
-                   _id:0,
-                }
-            },
-            {
-                $unwind: "$employee_Info"
-            },
-            {
-                $unwind: "$task_Info"
-            },
-           
-        ]
-        MyTimesheet.aggregation(pipeline).then(timesheet => {
-            if (timesheet) {
-                return helpers.success(resp, timesheet);
-            }
-            else {
-                return helpers.error(resp, 'Something went wrong');
-            }
-        }).catch(err => {
-            console.log(err);
-        })
-    
-    }
+   
 
     module.exports.deleteMyTimesheet=(req, resp, param)=>{
        let timesheetId=param

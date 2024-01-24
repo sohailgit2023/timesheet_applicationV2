@@ -8,7 +8,7 @@ const helpers = require('./../helper/helper');
 
     module.exports.updateStatusTimesheet=(req, resp, param, postData)=>{
         let timesheetId=param
-        postData.updatedAt=new Date();
+        // postData.updatedAt=new Date();
         try {
              MyTimesheet.get({timesheetId:timesheetId},{}).then(existing=>{
                 if(existing){
@@ -23,6 +23,7 @@ const helpers = require('./../helper/helper');
                         //  console.log(approvedHours);
                         //  console.log(taskObject.estimatedHours);
                         if(approvedHours<=taskObject.estimatedHours){
+                            postData.statusUpdatedAt=postData.status+" "+new Date().toLocaleString('en-IN','Asia/Kolkata');
                             // postData.updatedAt=new Date();
                             MyTimesheet.findAndUpdate({timesheetId:timesheetId},postData,option).then(timesheet=>{
                                 if(timesheet){
@@ -49,7 +50,7 @@ const helpers = require('./../helper/helper');
                     })
                 }
                 else if(postData.status==="rejected"){
-                   
+                    postData.statusUpdatedAt=postData.status+" "+new Date().toLocaleString('en-IN','Asia/Kolkata');
                     MyTimesheet.findAndUpdate({timesheetId:timesheetId},postData,option).then(timesheet=>{
                         if(timesheet){
                             return helpers.success(resp,timesheet)

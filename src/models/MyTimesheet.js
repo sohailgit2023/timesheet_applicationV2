@@ -19,18 +19,22 @@ const timesheetSchema = new mongoose.Schema({
         type:Number,
         required:true
     },
-    updatedAt: {
-        type: Date,
+    status: {
+        type: String,
         required: true
     },
     weekRange: {
         start: {
-            type: Date,
+            type: String,
             required: true
         },
         end: {
-            type: Date,
+            type: String,
             required: true
+        },
+        range:{
+            type:String,
+            required:true
         }
     },
     weeklyHours:{
@@ -41,7 +45,7 @@ const timesheetSchema = new mongoose.Schema({
         type:Number,
         required:true
     },
-    status: {
+    statusUpdatedAt: {
         type:String,
         required: true,
     },
