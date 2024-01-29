@@ -44,6 +44,7 @@ module.exports.getOneTask = (req, resp,employeeId) => {
             $project: {
                 _id: 0,
                 taskId: 1,
+                taskName:1,
                 startDate: {$dateToString:{format:"%d-%m-%Y",date:"$startDate"}},
                 endDate: {$dateToString:{format:"%d-%m-%Y",date:"$endDate"}},
                 "employee_Info.fName": 1,
@@ -119,6 +120,7 @@ module.exports.getAllTask = (req, resp) => {
             $project: {
                 _id: 0,
                 taskId: 1,
+                taskName:1,
                 startDate: {$dateToString:{format:"%d-%m-%Y",date:"$startDate"}},
                 endDate: {$dateToString:{format:"%d-%m-%Y",date:"$endDate"}},
                 "employee_Info.fName": 1,
@@ -167,6 +169,7 @@ module.exports.registerTask = (req, resp, postData) => {
     // console.log("asdfgnm,");
     const taskData = {
         taskId: 4000,
+        taskName:"",
         employeeId: employeeId,
         clientId: clientId,
         projectId: projectId,
@@ -200,22 +203,24 @@ module.exports.registerTask = (req, resp, postData) => {
                             if (!project) {
                                 return helpers.error(resp,'Project not found',404)
                             }
+                            const projectObject=new Object(project)
                             ChargeActivity.get({
                                 $and: [{ projectId: projectId }, { chargeCode: chargeCode }, { activityType: activityType }, { task: task }]
                             }).then(chargeActivity => {
                                 if (!chargeActivity) {
                                     return helpers.error(resp,'Charge Activity not found',404)
                                 }
+
                                 taskModel.findOne({}, { taskId: 1 }).sort({ taskId: -1 }).limit(1).then(result => {
                                     if (result) {
                                         taskData.taskId = result.taskId + 1;
-                
+                                        taskData.taskName=`${projectObject.name}-${chargeCode}-${activityType}-${task}`
                                         Task.create(taskData).then(task => {
-                
                                             return helpers.success(resp, task);
                                         })
                                     }
                                     else {
+                                        taskData.taskName=`${projectObject.name}-${chargeCode}-${activityType}-${task}`
                                         Task.create(taskData).then(task => {
                 
                                             return helpers.success(resp, task);

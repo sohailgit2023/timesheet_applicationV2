@@ -11,10 +11,6 @@ const timesheetSchema = new mongoose.Schema({
         type:Number,
         required:true
     },
-    taskId:{
-        type:Number,
-        required:true
-    },
     leadId:{
         type:Number,
         required:true
@@ -37,10 +33,6 @@ const timesheetSchema = new mongoose.Schema({
             required:true
         }
     },
-    weeklyHours:{
-        type:Array,
-        required:true
-    },
     totalHours:{
         type:Number,
         required:true
@@ -49,10 +41,79 @@ const timesheetSchema = new mongoose.Schema({
         type:String,
         required: true,
     },
-    notes:{
-        type:Array,
-        required:false
-    }
+    tasks:[{
+        taskId:{
+            type:Number,
+            required:true
+        },
+        taskName:{
+            type:String,
+            required:true
+        },
+        weeklyHours:{
+            sun:{
+                type:Number,
+                required:false
+            },
+            mon:{
+                type:Number,
+                required:false
+            },
+            tue:{
+                type:Number,
+                required:false
+            },
+            wed:{
+                type:Number,
+                required:false
+            },
+            thurs:{
+                type:Number,
+                required:false
+            },
+            fri:{
+                type:Number,
+                required:false
+            },
+            sat:{
+                type:Number,
+                required:false
+            },
+        },
+        weeklyNotes:{
+            sun:{
+                type:String,
+                required:false
+            },
+            mon:{
+                type:String,
+                required:false
+            },
+            tue:{
+                type:String,
+                required:false
+            },
+            wed:{
+                type:String,
+                required:false
+            },
+            thurs:{
+                type:String,
+                required:false
+            },
+            fri:{
+                type:String,
+                required:false
+            },
+            sat:{
+                type:String,
+                required:false
+            },
+        }
+
+    }],
+  
+   
 
 },{versionKey:false});
 mytimesheetModel = mongoose.model("my_timesheets", timesheetSchema);

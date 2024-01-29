@@ -82,10 +82,24 @@ const helpers = require('./../helper/helper');
             return helpers.error(resp, 'Server Error');
         }
     }
-    module.exports.getAllApprovalTimesheetByLead = (req, resp,leadId) => {
+
+    module.exports.getAllApprovalTimesheetByLead = (req, resp, leadId, year, employeeId, status) => {
         const selectParams = {
             _id: 0
         };
+        let matchConditions = {
+            "year": year,
+            "status": status
+        };
+     
+        if (employeeId !== 0 && employeeId !== undefined) {
+            matchConditions["employee_Info.employeeId"] = employeeId;
+        }
+     
+        if (leadId !== 0 && leadId !== undefined) {
+            matchConditions["employee_Info.leadId"] = leadId;
+        }
+     console.log(matchConditions);
         const pipeline = [
             {
                 $lookup: {
@@ -96,12 +110,7 @@ const helpers = require('./../helper/helper');
                 },
             },
             {
-                $match:{
-                    $and:[
-                        { "employee_Info.leadId":leadId},
-                    ]
-                   
-                }
+                $match: matchConditions
             },
             {
                 $lookup: {
@@ -111,7 +120,6 @@ const helpers = require('./../helper/helper');
                     as: "task_Info"
                 },
             },
-           
             {
                 $project: {
                    _id:0,
@@ -134,8 +142,81 @@ const helpers = require('./../helper/helper');
         }).catch(err => {
             console.log(err);
         })
-    
     }
+    // module.exports.getAllApprovalTimesheetByLead = (req, resp,leadId,year,employeeId,status) => {
+    //     const selectParams = {
+    //         _id: 0
+    //     };
+    //     let query={}
+    //     console.log(employeeId);
+    //     if(leadId){
+    //         query={ "employee_Info.leadId":leadId}
+    //     }
+    //     if(year){
+    //         query["weekRange"]=
+    //             {start: new RegExp('.*' + year + '.*', 'i')}
+    //     }
+    //     if(employeeId){
+    //         query["employee_Info.employeeId"]=employeeId
+            
+                
+    //     }
+    //     if(status){
+    //         console.log(typeof(status),typeof('all'));
+    //         if(status!='all'){
+    //             query["status"]=status
+                  
+    //         }
+    //         console.log(query);  
+    //     }
+        
+    //     const pipeline = [
+    //         {
+    //             $lookup: {
+    //                 from: 'employees',
+    //                 localField: "employeeId",
+    //                 foreignField: "employeeId",
+    //                 as: "employee_Info"
+    //             },
+    //         },
+    //         {
+    //             $match:{
+    //                 $and:[query]
+    //             }
+    //         },
+    //         {
+    //             $lookup: {
+    //                 from: 'tasks',
+    //                 localField: "taskId",
+    //                 foreignField: "taskId",
+    //                 as: "task_Info"
+    //             },
+    //         },
+           
+    //         {
+    //             $project: {
+    //                _id:0,
+    //             }
+    //         },
+    //         {
+    //             $unwind: "$employee_Info"
+    //         },
+    //         {
+    //             $unwind: "$task_Info"
+    //         },
+    //     ]
+    //     MyTimesheet.aggregation(pipeline).then(timesheet => {
+    //         if (timesheet) {
+    //             return helpers.success(resp, timesheet);
+    //         }
+    //         else {
+    //             return helpers.error(resp, 'Something went wrong');
+    //         }
+    //     }).catch(err => {
+    //         console.log(err);
+    //     })
+    
+    // }
 
     module.exports.deleteMyTimesheet=(req, resp, param)=>{
        let timesheetId=param

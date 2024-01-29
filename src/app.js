@@ -62,7 +62,7 @@ const server = http.createServer((req, resp) => {
       { path: "/mytimesheet", method: "GET" },
       { path: "/addMyTimesheet", method: "POST" },
       { path: "/updateMyTimesheet/MyTimesheetId", method: "PUT" },
-      { path: "/deleteMyTimesheet/MyTimesheetId", method: "DELETE" },
+      { path: "/deleteTaskOfMyTimesheet/MyTimesheetId/IndexOfTask", method: "DELETE" },
       { path: "/AdminApproval", method: "GET" },
       { path: "/LeadApproval/leadId", method: "GET" },
       { path: "/updateApproval/MyTimesheetId", method: "PUT" },
@@ -358,12 +358,12 @@ const server = http.createServer((req, resp) => {
       console.log(error);
     }
   }
-  else if (path.match(/^\/deleteMyTimesheet\/([0-9]+)$/) && method === 'DELETE') {
+  else if (path.match(/^\/deleteTaskOfMyTimesheet\/([0-9]+)\/([0-9]+)$/) && method === 'DELETE') {
     const param = path.split("/")
     const timesheetId = parseInt(param[2])
+    const taskIndex = parseInt(param[3])
     try {
-      MyTimesheetController.deleteMyTimesheet(req, resp, timesheetId)
-
+      MyTimesheetController.deleteTaskOfMyTimesheet(req, resp, timesheetId,taskIndex)
     } catch (error) {
       console.log(error);
     }
@@ -371,10 +371,14 @@ const server = http.createServer((req, resp) => {
   else if (path === '/AdminApproval' && method === 'GET') {
   ApprovalController.getAllApprovalTimesheet(req,resp)
   }
-  else if (path.match(/^\/LeadApproval\/([0-9]+)$/) && method === 'GET') {
+  else if (path.match(/.*\/LeadApproval\/([0-9]+)\/([0-9]+)\/([0-9]+)\/([a-z]+).*/) && method === 'GET') {
     const param = path.split("/")
     const leadId = parseInt(param[2])
-  ApprovalController.getAllApprovalTimesheetByLead(req,resp,leadId)
+    const year=parseInt(param[3])?param[3]:0
+    const employeeId=parseInt(param[4])
+    const status=param[5]
+
+  ApprovalController.getAllApprovalTimesheetByLead(req,resp,leadId,year,employeeId,status)
   }
   else if (path.match(/^\/updateApproval\/([0-9]+)$/) && method === 'PUT') {
     const param = path.split("/")

@@ -6,6 +6,10 @@ const taskSchema = new mongoose.Schema({
         type:Number,
         required:true
     },
+    taskName:{
+        type:String,
+        required:true
+    },
     employeeId:{
         type:Number,
         required:true,
