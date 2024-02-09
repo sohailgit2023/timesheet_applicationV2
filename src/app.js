@@ -12,7 +12,7 @@ const TimesheetSettingController=require('./controller/timesheetSettingControlle
 const { log } = require('console');
 const MyTimesheetController=require('./controller/myTimesheetController')
 const ApprovalController=require('./controller/approvalController')
-
+const MyDashboardController=require('./controller/myDashboardController')
 const server = http.createServer((req, resp) => {
   //console.log(req.url)
   const origin = req.headers.origin || '*';
@@ -62,9 +62,8 @@ const server = http.createServer((req, resp) => {
       { path: "/mytimesheet", method: "GET" },
       { path: "/addMyTimesheet", method: "POST" },
       { path: "/updateMyTimesheet/MyTimesheetId", method: "PUT" },
-      { path: "/deleteTaskOfMyTimesheet/MyTimesheetId/IndexOfTask", method: "DELETE" },
-      { path: "/AdminApproval", method: "GET" },
-      { path: "/LeadApproval/leadId", method: "GET" },
+      { path: "/deleteMyTimesheet/MyTimesheetId", method: "DELETE" },
+      { path: "/approval/year/leadId/employeeId/status", method: "GET" },
       { path: "/updateApproval/MyTimesheetId", method: "PUT" },
     ]
     resp.end(JSON.stringify(URL))
@@ -358,27 +357,22 @@ const server = http.createServer((req, resp) => {
       console.log(error);
     }
   }
-  else if (path.match(/^\/deleteTaskOfMyTimesheet\/([0-9]+)\/([0-9]+)$/) && method === 'DELETE') {
+  else if (path.match(/^\/deleteMyTimesheet\/([0-9]+)$/) && method === 'DELETE') {
     const param = path.split("/")
     const timesheetId = parseInt(param[2])
-    const taskIndex = parseInt(param[3])
     try {
-      MyTimesheetController.deleteTaskOfMyTimesheet(req, resp, timesheetId,taskIndex)
+      MyTimesheetController.deleteMyTimesheet(req, resp, timesheetId)
     } catch (error) {
       console.log(error);
     }
   }
-  else if (path === '/AdminApproval' && method === 'GET') {
-  ApprovalController.getAllApprovalTimesheet(req,resp)
-  }
-  else if (path.match(/.*\/LeadApproval\/([0-9]+)\/([0-9]+)\/([0-9]+)\/([a-z]+).*/) && method === 'GET') {
+  else if (path.match(/.*\/approval\/([0-9]+)\/([0-9]+)\/([0-9]+)\/([a-z]+).*/) && method === 'GET') {
     const param = path.split("/")
-    const leadId = parseInt(param[2])
-    const year=parseInt(param[3])?param[3]:0
-    const employeeId=parseInt(param[4])
+    const year=parseInt(param[2])?param[2]:0
+    const leadId = parseInt(param[3])?parseInt(param[3]):0
+    const employeeId=parseInt(param[4])?parseInt(param[4]):0
     const status=param[5]
-
-  ApprovalController.getAllApprovalTimesheetByLead(req,resp,leadId,year,employeeId,status)
+    ApprovalController.getAllApprovalTimesheet(req,resp,leadId,year,employeeId,status)
   }
   else if (path.match(/^\/updateApproval\/([0-9]+)$/) && method === 'PUT') {
     const param = path.split("/")
@@ -392,6 +386,11 @@ const server = http.createServer((req, resp) => {
       console.log(error);
     }
   }
+  else if (path.match(/^\/mydashboard\/([0-9]+)$/) && method === 'GET') {
+    const param = path.split("/")
+    const employeeId = parseInt(param[2])
+    MyDashboardController.MyDashboard(req,resp,employeeId)
+    }
   else {
     resp.writeHead(404, { 'Content-Type': 'application/json' });
     resp.end(JSON.stringify({ message: "Page not found" }))

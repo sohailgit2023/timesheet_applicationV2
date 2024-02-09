@@ -6,6 +6,7 @@ const Task = require('./../models/Task')
 
 // const Project = require('./../models/Project');
 const helpers = require('./../helper/helper');
+const { tasks } = require('../helper/common');
 
 
 module.exports.getAllMyTimesheet = (req, resp, employeeId) => {
@@ -99,7 +100,7 @@ module.exports.getAllWeeklyMyTimesheet = (req, resp, employeeId, week) => {
     })
 
 }
-module.exports.registerMyTimesheet = (req, resp, postData) => {
+module.exports.registerMyTimesheet = async (req, resp, postData) => {
     let { employeeId, weekRange } = postData
     // console.log("asdfgnm,");
     const status = "draft";
@@ -150,8 +151,20 @@ module.exports.registerMyTimesheet = (req, resp, postData) => {
         TimesheetData.weekRange.start = weekRanges.startDate;
         TimesheetData.weekRange.end = weekRanges.endDate
         TimesheetData.weekRange.range = weekRanges.start.toString() + " to " + weekRanges.end.toString()
-        // console.log("1");
-        MyTimesheet.get({ $and: [{ employeeId: employeeId }, { "weekRange.start": weekRanges.startDate }] }).then(existing => {
+        var taskId=[];
+        for (let task of postData.tasks) {
+            const existing=await Task.get({$and:[{employeeId:employeeId},{taskId:task.taskId}]})
+                   if(!existing){
+                     //  throw helpers.error(resp,`taskId: ${task.taskId} not found`,404)  
+                     taskId.push(task.taskId)
+                 }
+           
+        }
+        if(taskId.length>0){
+            return helpers.error(resp,`this taskId: ${taskId.join(", ")} is not assigned to you`,404)  
+        }
+       // console.log(taskId);
+        MyTimesheet.get({ $and: [{ employeeId: employeeId }, { "weekRange.start": weekRanges.startDate },{status:"draft"}] }).then(existing => {
             if (!existing) {
                 Employee.get({ $or: [{ employeeId: employeeId }] }, selectParams).then(existing => {
                     if (existing) {
@@ -163,7 +176,12 @@ module.exports.registerMyTimesheet = (req, resp, postData) => {
                                 sum += task.weeklyHours[days]
                             }
                         }
-                        TimesheetData.totalHours = sum
+                       if (sum>=0 && sum<=168) {
+                         TimesheetData.totalHours = sum
+                       }
+                       else{
+                        return helpers.error(resp,"total hours must be between  0-168 hrs",403)
+                       }
                         mytimesheetModel.findOne({}, { timesheetId: 1 }).sort({ timesheetId: -1 }).limit(1).then(result => {
                             if (result) {
                                 TimesheetData.timesheetId = result.timesheetId + 1;
@@ -227,8 +245,13 @@ module.exports.updateMyTimesheet = (req, resp, param, postData) => {
                     }
                 }
                 console.log(sum);
-               TimesheetData.totalHours=sum
-                if (timesheetObject.status === 'draft') {
+                if (sum>=0 && sum<=168) {
+                    TimesheetData.totalHours = sum
+                  }
+                  else{
+                   return helpers.error(resp,"total hours must be between  0-168 hrs",403)
+                  }
+                if (timesheetObject.status === 'draft' || timesheetObject.status === 'rejected') {
                   
                     MyTimesheet.findAndUpdate({ timesheetId: timesheetId }, TimesheetData, option).then(timesheet => {
                         if (timesheet) {
@@ -261,58 +284,17 @@ module.exports.updateMyTimesheet = (req, resp, param, postData) => {
     }
 }
 
-module.exports.deleteTaskOfMyTimesheet = (req, resp, param,taskIndex) => {
+module.exports.deleteMyTimesheet = (req, resp, param) => {
     let timesheetId = param
     try {
         //this.updateEmployee(req,resp,employeeId,{status:'inactive'})
-        MyTimesheet.get({ timesheetId: timesheetId }, {}).then(timesheet => {
-            let timesheetObject = new Object(timesheet);
-           // timesheetObject.tasks[taskIndex].remove()
-          if (timesheetObject.tasks.length!==1) {
-            console.log(timesheetObject.tasks.length);
-             timesheetObject.tasks.splice(taskIndex,1)
-              //console.log(timesheetObject.tasks);
-              const option = {
-                  new: true
-              }
-              let sum = 0;
-              for (var task of timesheetObject.tasks) {
-                  //console.log(task.weeklyHours);
-                  for (let days in task.weeklyHours) {
-                      // console.log(days)
-                      if(typeof(task.weeklyHours[days])==='number'){
-                         // console.log(task.weeklyHours[days]);
-                          sum += task.weeklyHours[days]
-                      }
-                      //  console.log(task.weeklyHours[days]);
-                  }
-                 
-              }
-               //console.log(sum);
-             timesheetObject.totalHours=sum
-              MyTimesheet.findAndUpdate({ timesheetId: timesheetId }, timesheetObject, option).then(timesheet => {
-                  if (timesheet) {
-                     
-                      return helpers.success(resp, timesheet)
-                  }
-                  else {
-                      return helpers.error(resp, 'Something went wrong');
-                  }
-  
-              }).catch(err => {
-                  return helpers.error(resp, 'Something went wrong');
-              });
-          }
-          else{
+        MyTimesheet.get({ timesheetId: timesheetId }, {}).then(timesheetId => {
             MyTimesheet.remove({ timesheetId: timesheetId }).then(result => {
                 return helpers.success(resp, { message: "Delete Successfully" })
             })
-          }
         })
-
     }
     catch (err) {
         console.log(err);
     }
 }
-

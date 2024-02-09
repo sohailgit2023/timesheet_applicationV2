@@ -177,6 +177,7 @@ module.exports.registerTask = (req, resp, postData) => {
         activityType: activityType,
         task: task,
         estimatedHours: estimatedHours,
+        consumedHours: 0,
         startDate: startDate,
         endDate: endDate,
         billable: billable,
