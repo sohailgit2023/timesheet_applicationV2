@@ -18,21 +18,39 @@ module.exports.getOneEmployee= (req,resp,leadId)=>{
                 from: 'leads',
                 localField: "employeeId",
                 foreignField: "employeeId",
-                as: "lead_Info"
+                as: "lead_Info",
             }
         },
-        // {
-        //     $match:{"lead_Info.effectiveDate":{$lte:[]}}
-        // },
         {
-            $project: {
-               _id:0,
-             
+            $unwind: {
+                path: "$lead_Info",
+                preserveNullAndEmptyArrays: true
             }
         },
-        // {
-        //     $unwind: "$lead_Info"
-        // },
+
+        {
+            $sort: { "lead_Info.effectiveDate": -1 }
+        },
+        {
+            $group: {
+                _id: "$_id",
+                employee: { $first: "$$ROOT" },
+                lead_Info: { $first: "$lead_Info" },
+
+            }
+        },
+        {
+            $replaceRoot: {
+                newRoot: {
+                    $mergeObjects: ["$employee", {
+                        lead_Info: "$lead_Info",
+                    }]
+                }
+            }
+        },
+        {
+            $sort: { employeeId: 1 }
+        },
     ];
 
   Employee.aggregation(pipeline).then(employee=>{

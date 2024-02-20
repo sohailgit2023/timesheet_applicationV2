@@ -65,6 +65,8 @@ const server = http.createServer((req, resp) => {
       { path: "/deleteMyTimesheet/MyTimesheetId", method: "DELETE" },
       { path: "/approval/year/leadId/employeeId/status", method: "GET" },
       { path: "/updateApproval/MyTimesheetId", method: "PUT" },
+      { path: "/mydashboard/EmployeeId", method: "GET" },
+      { path: "/teamdashboard/LeadId", method: "GET" },
     ]
     resp.end(JSON.stringify(URL))
   }
@@ -391,6 +393,14 @@ const server = http.createServer((req, resp) => {
     const employeeId = parseInt(param[2])
     MyDashboardController.MyDashboard(req,resp,employeeId)
     }
+    else if (path.match(/^\/teamdashboard\/([0-9]+)$/) && method === 'GET') {
+      const param = path.split("/")
+      const leadId = parseInt(param[2])
+      MyDashboardController.TeamDashboard(req,resp,leadId)
+      }
+      else if (path === '/admindashboard' && method === 'GET') {
+       MyDashboardController.AdminDashboard(req,resp);
+      }
   else {
     resp.writeHead(404, { 'Content-Type': 'application/json' });
     resp.end(JSON.stringify({ message: "Page not found" }))
