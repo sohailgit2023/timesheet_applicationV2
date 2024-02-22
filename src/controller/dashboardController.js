@@ -1,12 +1,12 @@
 const mongoose = require('mongoose');
-const Employee = require('./../models/Employee');
-const LeadHistory = require('./../models/LeadHistory');
-const TimesheetSetting=require('./../models/Timesheetsetting')
-const MyTimesheet = require('./../models/MyTimesheet');
-const Task = require('./../models/Task');
+const Employee = require('../models/Employee');
+const LeadHistory = require('../models/LeadHistory');
+const TimesheetSetting=require('../models/Timesheetsetting')
+const MyTimesheet = require('../models/MyTimesheet');
+const Task = require('../models/Task');
  
 // const Project = require('./../models/Project');
-const helpers = require('./../helper/helper');
+const helpers = require('../helper/helper');
 // const { tasks } = require('../helper/common');
 // const TimesheetSetting = require('./../models/Timesheetsetting');
 // const Timesheet = require('./../models/MyTimesheet');
@@ -336,4 +336,205 @@ module.exports.TeamDashboard = (req, resp, employeeId) => {
     });
 };
 
+module.exports.AdminDashboard = (req, resp) => {
+ 
+    const pipeline = [
+
+        {
+            $lookup: {
+                from: 'timesheets',
+                localField: "employeeId",
+                foreignField: "employeeId",
+                as: "timesheet_Info"
+            }
+        },
+        {
+            $lookup: {
+                from: 'clients',
+                localField: "timesheet_Info.clientId",
+                foreignField: "clientId",
+                as: "client_Info"
+            }
+        },
+        {
+            $lookup: {
+                from: 'tasks',
+                localField: "employeeId",
+                foreignField: "employeeId",
+                as: "task_Info"
+            }
+        },
+        {
+            $lookup: {
+                from: 'projects',
+                localField: "task_Info.projectId",
+                foreignField: "projectId",
+                as: "project_Info"
+            },
+        },
+        {
+            $lookup: {
+                from: 'my_timesheets',
+                localField: "employeeId",
+                foreignField: "employeeId",
+                as: "my_timesheets_Info"
+            }
+        },
+        {
+            $lookup: {
+                from: 'employees',
+                localField: "employeeId",
+                foreignField: "employeeId",
+                as: "employee_Info"
+            }
+        },
+        {
+            $unwind: {
+                path: "$my_timesheets_Info",
+                preserveNullAndEmptyArrays: true
+            }
+        },
+
+        {
+            $unwind: {
+                path: "$project_Info",
+                preserveNullAndEmptyArrays: true
+            }
+        },
+        {
+            $group: {
+                _id: null,
+                reportees: { $addToSet: { fullName: '$fullName', employeeId: '$employeeId' } },
+                employees:{$first:"$employee_Info"},
+               
+                tasks: { $addToSet:
+                    {
+                        task_Info:"$task_Info",
+                        employeeName:"$fullName",                 
+                    }
+                 },
+                project:{$addToSet: "$project_Info"},
+                timesheets: { $addToSet: { $ifNull: ["$timesheet_Info", null] } },
+                clients: { $addToSet: "$client_Info" },
+                myTimesheets: { $addToSet: "$my_timesheets_Info" }
+            }
+        },
+        {
+            $project: {
+                _id: 0,
+                directReportees: '$reportees',
+                statusCounts: {
+                    draft: {
+                        $size: {
+                            $filter: {
+                                input: '$myTimesheets',
+                                as: 'timesheet',
+                                cond: { $eq: ['$$timesheet.status', 'draft'] }
+                            }
+                        }
+                    },
+                    approved: {
+                        $size: {
+                            $filter: {
+                                input: '$myTimesheets',
+                                as: 'timesheet',
+                                cond: { $eq: ['$$timesheet.status', 'approved'] }
+                            }
+                        }
+                    },
+                    rejected: {
+                        $size: {
+                            $filter: {
+                                input: '$myTimesheets',
+                                as: 'timesheet',
+                                cond: { $eq: ['$$timesheet.status', 'rejected'] }
+                            }
+                        }
+                    },
+                    submit: {
+                        $size: {
+                            $filter: {
+                                input: '$myTimesheets',
+                                as: 'timesheet',
+                                cond: { $eq: ['$$timesheet.status', 'submit'] }
+                            }
+                        }
+                    }
+                },
+                clients: {
+                    $reduce: { input: '$clients', initialValue: [], in: { $setUnion: ['$$value', '$$this'] } }
+                },
+                //clients:"$clients",
+                weeklyTimesheets: {
+                    $filter: {
+                        input: '$myTimesheets',
+                        as: 'timesheet',
+                        cond: { $eq: ['$$timesheet.status', 'submit'] }
+                    }
+                },
+                allTasks: {
+                    $map: {
+                        input: '$tasks',
+                        as: 'task',
+                        in: {
+                            employeeName: '$$task.employeeName',
+                           
+                            project: {
+                                $map: {
+                                    input: '$$task.task_Info',
+                                    as: 'taskItem',
+                                    in: {
+                                        taskName: '$$taskItem.task',
+                                        billable: '$$taskItem.billable',
+                                        consumedHours: '$$taskItem.consumedHours',
+                                        projectName: {
+                                            $reduce: {
+                                                input: "$project",
+                                                initialValue: "",
+                                                in: {
+                                                    $cond: [
+                                                        { $eq: ["$$this.projectId", "$$taskItem.projectId"] },
+                                                        "$$this.name",
+                                                        "$$value"
+                                                    ]
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        {
+            $project:{
+                _id:0,
+                statusCounts:"$statusCounts",
+                directReportees:"$directReportees",
+                clients: {
+                    $filter: {
+                        input: '$clients',
+                        as: 'client',
+                        cond: { $eq: ['$$client.status', 'active'] }
+                    }
+                },
+                allTasks:"$allTasks",
+                weeklyTimesheets:"$weeklyTimesheets"
+                
+            }
+        }  
+    ];
+    Employee.aggregation(pipeline).then(result => {
+        if (result && result.length > 0) {
+            return helpers.success(resp, result);
+        } else {
+            return helpers.error(resp, 'No timesheets found for the specified employee ID');
+        }
+    }).catch(err => {
+        console.log(err);
+        return helpers.error(resp, 'An error occurred during the aggregation process');
+    });
+};
 

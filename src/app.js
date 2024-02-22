@@ -12,7 +12,7 @@ const TimesheetSettingController=require('./controller/timesheetSettingControlle
 const { log } = require('console');
 const MyTimesheetController=require('./controller/myTimesheetController')
 const ApprovalController=require('./controller/approvalController')
-const MyDashboardController=require('./controller/myDashboardController')
+const dashboardController=require('./controller/dashboardController')
 const server = http.createServer((req, resp) => {
   //console.log(req.url)
   const origin = req.headers.origin || '*';
@@ -391,15 +391,15 @@ const server = http.createServer((req, resp) => {
   else if (path.match(/^\/mydashboard\/([0-9]+)$/) && method === 'GET') {
     const param = path.split("/")
     const employeeId = parseInt(param[2])
-    MyDashboardController.MyDashboard(req,resp,employeeId)
+    dashboardController.MyDashboard(req,resp,employeeId)
     }
     else if (path.match(/^\/teamdashboard\/([0-9]+)$/) && method === 'GET') {
       const param = path.split("/")
       const leadId = parseInt(param[2])
-      MyDashboardController.TeamDashboard(req,resp,leadId)
+      dashboardController.TeamDashboard(req,resp,leadId)
       }
       else if (path === '/admindashboard' && method === 'GET') {
-       MyDashboardController.AdminDashboard(req,resp);
+       dashboardController.AdminDashboard(req,resp);
       }
   else {
     resp.writeHead(404, { 'Content-Type': 'application/json' });
