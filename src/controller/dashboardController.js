@@ -219,7 +219,7 @@ module.exports.TeamDashboard = (req, resp, employeeId) => {
         {
             $group: {
                 _id: null,
-                reportees: { $addToSet: { fullName: '$fullName', employeeId: '$employeeId' } },
+                reportees: { $addToSet: { employeeName: '$fullName', employeeId: '$employeeId' } },
                 employees:{$first:"$employee_Info"},
                
                 tasks: { $addToSet:
@@ -231,7 +231,14 @@ module.exports.TeamDashboard = (req, resp, employeeId) => {
                 project:{$addToSet: "$project_Info"},
                 timesheets: { $addToSet: { $ifNull: ["$timesheet_Info", null] } },
                 clients: { $addToSet: { $cond: { if: "$client_Info", then: "$client_Info", else: null } } },
-                myTimesheets: { $addToSet: "$my_timesheets_Info" }
+                myTimesheets: {
+                    $addToSet: {
+                        $mergeObjects: [
+                            { employeeName: '$fullName',email:'$email' },
+                            '$my_timesheets_Info',
+                        ]
+                    }
+                }
             }
         },
         {
@@ -322,13 +329,35 @@ module.exports.TeamDashboard = (req, resp, employeeId) => {
                     }
                 }
             }
-        },  
+        },
+        {
+            $project:{
+                _id:0,
+                statusCounts:"$statusCounts",
+                directReportees:{
+                    $sortArray:{
+                        input:'$directReportees',
+                        sortBy:{employeeName:1}
+                    }
+                },
+                clients: {
+                    $filter: {
+                        input: '$clients',
+                        as: 'client',
+                        cond: { $eq: ['$$client.status', 'active'] }
+                    }
+                },
+                allTasks:"$allTasks",
+                weeklyTimesheets:"$weeklyTimesheets"
+               
+            }
+        }    
     ];
     Employee.aggregation(pipeline).then(result => {
         if (result && result.length > 0) {
             return helpers.success(resp, result);
         } else {
-            return helpers.error(resp, 'No timesheets found for the specified employee ID');
+            return helpers.error(resp, 'No records found for the specified employee ID');
         }
     }).catch(err => {
         console.log(err);
@@ -336,10 +365,12 @@ module.exports.TeamDashboard = (req, resp, employeeId) => {
     });
 };
 
+
+
 module.exports.AdminDashboard = (req, resp) => {
  
     const pipeline = [
-
+ 
         {
             $lookup: {
                 from: 'timesheets',
@@ -394,7 +425,7 @@ module.exports.AdminDashboard = (req, resp) => {
                 preserveNullAndEmptyArrays: true
             }
         },
-
+ 
         {
             $unwind: {
                 path: "$project_Info",
@@ -404,21 +435,29 @@ module.exports.AdminDashboard = (req, resp) => {
         {
             $group: {
                 _id: null,
-                reportees: { $addToSet: { fullName: '$fullName', employeeId: '$employeeId' } },
+                reportees: { $addToSet: { employeeName: '$fullName', employeeId: '$employeeId' } },
                 employees:{$first:"$employee_Info"},
                
                 tasks: { $addToSet:
                     {
                         task_Info:"$task_Info",
-                        employeeName:"$fullName",                 
+                        employeeName:"$fullName",                
                     }
                  },
                 project:{$addToSet: "$project_Info"},
                 timesheets: { $addToSet: { $ifNull: ["$timesheet_Info", null] } },
                 clients: { $addToSet: "$client_Info" },
-                myTimesheets: { $addToSet: "$my_timesheets_Info" }
+                myTimesheets: {
+                    $addToSet: {
+                        $mergeObjects: [
+                            { employeeName: '$fullName',email:'$email' },
+                            '$my_timesheets_Info',
+                        ]
+                    }
+                }
             }
         },
+       
         {
             $project: {
                 _id: 0,
@@ -508,11 +547,17 @@ module.exports.AdminDashboard = (req, resp) => {
                 }
             }
         },
+        
         {
             $project:{
                 _id:0,
                 statusCounts:"$statusCounts",
-                directReportees:"$directReportees",
+                directReportees:{
+                    $sortArray:{
+                        input:'$directReportees',
+                        sortBy:{employeeName:1}
+                    }
+                },
                 clients: {
                     $filter: {
                         input: '$clients',
@@ -522,9 +567,10 @@ module.exports.AdminDashboard = (req, resp) => {
                 },
                 allTasks:"$allTasks",
                 weeklyTimesheets:"$weeklyTimesheets"
-                
+               
             }
-        }  
+        } , 
+       
     ];
     Employee.aggregation(pipeline).then(result => {
         if (result && result.length > 0) {
@@ -537,4 +583,3 @@ module.exports.AdminDashboard = (req, resp) => {
         return helpers.error(resp, 'An error occurred during the aggregation process');
     });
 };
-

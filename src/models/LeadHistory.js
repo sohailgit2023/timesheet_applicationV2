@@ -15,7 +15,7 @@ const leadHistorySchema = new mongoose.Schema({
         required:true
     },
     effectiveDate:{
-        type:Date,
+        type:String,
         required:true
     }
 },{versionKey:false});

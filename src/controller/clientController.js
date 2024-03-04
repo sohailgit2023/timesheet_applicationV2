@@ -1,21 +1,74 @@
 const mongoose = require('mongoose');
 const Client= require('./../models/Clients')
-
+const Employee = require('../models/Employee');
 const Project = require('./../models/Project');
 const helpers = require('./../helper/helper');
 
-    module.exports.getOneClient= (req,resp,clientId)=>{
-        const selectParams = {
-            _id:0
-        };
-       Client.get({clientId:clientId},selectParams).then(client=>{
-        // console.log(employee);
-        return helpers.success(resp, client);
-       }).catch(err=>{
-        console.log(err)
-       })
+    // module.exports.getOneClient= (req,resp,clientId)=>{
+    //     const selectParams = {
+    //         _id:0
+    //     };
+    //    Client.get({clientId:clientId},selectParams).then(client=>{
+    //     // console.log(employee);
+    //     return helpers.success(resp, client);
+    //    }).catch(err=>{
+    //     console.log(err)
+    //    })
       
-    }
+    // }
+
+    module.exports.getClientByEmployee = (req, resp, employeeId) => {
+        const pipeline = [
+            {
+                $match: {
+                    employeeId: employeeId
+                }
+            },
+            {
+                $lookup: {
+                    from: 'timesheets',
+                    localField: "employeeId",
+                    foreignField: "employeeId",
+                    as: "timesheet_Info"
+                },
+            },
+            {
+                $lookup: {
+                    from: 'clients',
+                    localField: "timesheet_Info.clientId",
+                    foreignField: "clientId",
+                    as: "client_Info"
+                },
+            },
+           
+            {
+                $group: {  
+                    _id:null,
+                    client_Info: { $first: "$client_Info" },
+                }
+            },
+            {
+                $project: {
+                    _id: 0,
+                    client_Info: 1,
+                }
+            }
+            
+        ];
+     
+        Employee.aggregation(pipeline).then(result => {
+            if (result && result.length > 0) {
+                return helpers.success(resp, result[0]);
+            } else {
+                return helpers.error(resp, 'No client found for the specified client ID');
+            }
+        }).catch(err => {
+            console.log(err);
+            return helpers.error(resp, 'An error occurred during the aggregation process');
+        });
+    };
+
+    
     module.exports.getAllClient= (req,resp)=>{
         const selectParams = {
             _id:0

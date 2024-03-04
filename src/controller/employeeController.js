@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const Employee= require('./../models/Employee')
 const LeadHistory=require('./../models/LeadHistory')
-
+//const moment = require('moment');
 // const Project = require('./../models/Project');
 const helpers = require('./../helper/helper');
 
@@ -61,8 +61,70 @@ module.exports.getOneEmployee= (req,resp,leadId)=>{
         return helpers.error(resp,'Something went wrong');
     }
   })
-  
 }
+
+module.exports.getOneEmployeeByEmail= (req,resp,email)=>{
+    const selectParams = {
+        _id:0
+    };
+    console.log(email);
+    const pipeline = [
+        {
+            $match: { email:  new RegExp('^' + email + '$', 'i') }
+        },
+        {
+            $lookup: {
+                from: 'leads',
+                localField: "employeeId",
+                foreignField: "employeeId",
+                as: "lead_Info",
+            }
+        },
+        {
+            $unwind: {
+                path: "$lead_Info",
+                preserveNullAndEmptyArrays: true
+            }
+        },
+
+        {
+            $sort: { "lead_Info.effectiveDate": -1 }
+        },
+        {
+            $group: {
+                _id: "$_id",
+                employee: { $first: "$$ROOT" },
+                lead_Info: { $first: "$lead_Info" },
+
+            }
+        },
+        {
+            $replaceRoot: {
+                newRoot: {
+                    $mergeObjects: ["$employee", {
+                        lead_Info: "$lead_Info",
+                    }]
+                }
+            }
+        },
+        {
+            $sort: { employeeId: 1 }
+        },
+    ];
+
+  Employee.aggregation(pipeline).then(employee=>{
+    console.log(employee);
+    if(employee){
+        return helpers.success(resp, employee);
+    }
+    else{
+        return helpers.error(resp,'Something went wrong');
+    }
+  })
+}
+
+
+
     module.exports.getAllEmployee= (req,resp)=>{
         const selectParams = {
             _id:0
@@ -117,7 +179,9 @@ module.exports.getOneEmployee= (req,resp,leadId)=>{
       })
       
     }
-    module.exports.registerEmployee=(req,resp,postData)=>{
+
+
+    module.exports.registerEmployee=async (req,resp,postData)=>{
         let {fName, lName, email, gender,leadId, isLead}=postData
         // console.log("asdfgnm,");
         const employeeData={
@@ -130,6 +194,8 @@ module.exports.getOneEmployee= (req,resp,leadId)=>{
             isLead:isLead,
             leadId:leadId
         }
+        const session = await mongoose.startSession();
+        session.startTransaction();
         try { 
             const selectParams = {
                _id:0
@@ -152,13 +218,17 @@ module.exports.getOneEmployee= (req,resp,leadId)=>{
                                             $set: { 
                                                isLead:true }
                                         }
-                                        Employee.findAndUpdate({employeeId:leadId},data,option).then((Updated)=>{
+                                        Employee.findAndUpdate({employeeId:leadId},data,option,{session}).then((Updated)=>{
                                             Employee.create(employeeData).then(employee=>{
                                                 const leadHistoryData={
                                                     employeeId:employeeData.employeeId,
                                                     leadName:leadObject.fullName,
                                                     leadId:leadId,
-                                                   effectiveDate:new Date()
+                                                   effectiveDate:effectiveDate.toLocaleDateString('en-US', {
+                                                    day: '2-digit',
+                                                    month: 'short',
+                                                    year: 'numeric'
+                                                })
                                                     // leadId:leadId
                                                 }
                                                 if(employee){
@@ -176,7 +246,11 @@ module.exports.getOneEmployee= (req,resp,leadId)=>{
                                                 employeeId:employeeData.employeeId,
                                                 leadName:leadObject.fullName,
                                                 leadId:leadId,
-                                               effectiveDate:new Date()
+                                               effectiveDate:new Date().toLocaleDateString('en-US', {
+                                                day: '2-digit',
+                                                month: 'short',
+                                                year: 'numeric'
+                                            })
                                                 // leadId:leadId
                                             }
                                             if(employee){
@@ -194,7 +268,11 @@ module.exports.getOneEmployee= (req,resp,leadId)=>{
                                             employeeId:employeeData.employeeId,
                                             leadName:leadObject.fullName,
                                              leadId:leadId,
-                                           effectiveDate:new Date()
+                                             effectiveDate:new Date().toLocaleDateString('en-US', {
+                                                day: '2-digit',
+                                                month: 'short',
+                                                year: 'numeric'
+                                            })
                                             // leadId:leadId
                                         }
                                         if(employee){
@@ -222,6 +300,7 @@ module.exports.getOneEmployee= (req,resp,leadId)=>{
             helpers.error(resp)
         }
     }
+   
 
     module.exports.updateEmployee=(req, resp, param, postData)=>{
         let employeeId=param
@@ -241,7 +320,11 @@ module.exports.getOneEmployee= (req,resp,leadId)=>{
                                     employeeId:employeeId,
                                     leadName:leadObject.fullName,
                                      leadId:leadObject.employeeId,
-                                   effectiveDate:new Date()
+                                     effectiveDate:new Date().toLocaleDateString('en-US', {
+                                        day: '2-digit',
+                                        month: 'short',
+                                        year: 'numeric'
+                                    })
                                 }
                                 if(employee){
                                     LeadHistory(leadHistoryData).save().then(lead=>{
@@ -262,7 +345,11 @@ module.exports.getOneEmployee= (req,resp,leadId)=>{
                                     employeeId:employeeId,
                                     leadName:leadObject.fullName,
                                      leadId:leadObject.employeeId,
-                                   effectiveDate:new Date()
+                                     effectiveDate:new Date().toLocaleDateString('en-US', {
+                                        day: '2-digit',
+                                        month: 'short',
+                                        year: 'numeric'
+                                    })
                                 }
                                 if(employee){
                                     Employee.findAndUpdate({employeeId:leadObject.employeeId},{isLead:true},option).then(leadUpdated=>{
