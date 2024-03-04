@@ -448,11 +448,7 @@ require('./db/config')
       saveUninitialized: true,
       cookie: { secure: false } // Use secure cookies with HTTPS
     }));
-    app.use(cors({
-      // origin:req.headers.origin || '*',
-      // methods:"GET,POST,PUT,DELETE",
-      credentials:true
-  }));
+    app.use(cors());
   app.use(express.json());
     app.use(passport.initialize());
     app.use(passport.session());
