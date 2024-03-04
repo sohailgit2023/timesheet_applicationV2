@@ -426,6 +426,7 @@ const express = require('express');
 require('./db/config')
     const passport = require('passport');
     const session = require('express-session');
+    const cors=require('cors')
     const AzureAdOAuth2Strategy = require('passport-azure-ad-oauth2').Strategy;
    const User=require('./models/Employee')
    const jwt=require('jsonwebtoken')
@@ -447,7 +448,12 @@ require('./db/config')
       saveUninitialized: true,
       cookie: { secure: false } // Use secure cookies with HTTPS
     }));
-   
+    app.use(cors({
+      // origin:req.headers.origin || '*',
+      // methods:"GET,POST,PUT,DELETE",
+      credentials:true
+  }));
+  app.use(express.json());
     app.use(passport.initialize());
     app.use(passport.session());
  
