@@ -436,7 +436,7 @@ require('./db/config')
     const azureAdOptions = {
       clientID: "02f17b44-f69a-4113-869c-93067447c922",
       clientSecret: 'c_.8Q~Y7P8WhkSg2AIaN-Yv.DyxYpXCo2ttnWb_w',
-      callbackURL:  'http://localhost:4000/auth/azureadoauth2/callback',
+      callbackURL:  'https://timesheet-application-9xly.onrender.com/auth/azureadoauth2/callback',
       resource: 'https://graph.microsoft.com/',
       tenant: '06191626-9f52-42fe-8889-97d24d7a6e95',
     };
