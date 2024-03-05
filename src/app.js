@@ -455,7 +455,7 @@ require('./db/config')
       credentials:true,            //access-control-allow-credentials:true
       optionSuccessStatus:200
   }
-  app.use(cors(corsOptions));
+  app.use(cors({origin: true, credentials: true}));
   app.use(express.json());
     app.use(passport.initialize());
     app.use(passport.session());
