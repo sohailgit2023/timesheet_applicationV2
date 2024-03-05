@@ -450,7 +450,12 @@ require('./db/config')
       saveUninitialized: true,
       cookie: { secure: false } // Use secure cookies with HTTPS
     }));
-    app.options('/login',cors());
+    const corsOptions ={
+      origin:'https://sprightly-taffy-45cd64.netlify.app', 
+      credentials:true,            //access-control-allow-credentials:true
+      optionSuccessStatus:200
+  }
+  app.use(cors(corsOptions));
   app.use(express.json());
     app.use(passport.initialize());
     app.use(passport.session());
