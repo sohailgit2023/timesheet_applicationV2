@@ -454,9 +454,9 @@ const proxy = httpProxy.createProxyServer();
       saveUninitialized: true,
       cookie: { secure: true } // Use secure cookies with HTTPS
     }));
-    app.use('/login', (req, res) => {
-      proxy.web(req, res, { target: 'https://login.windows.net' });
-    });
+    // app.use('/login', (req, res) => {
+    //   proxy.web(req, res, { target: 'https://login.windows.net' });
+    // });
     
     // const corsOptions ={
   //     origin:'https://sprightly-taffy-45cd64.netlify.app', 
@@ -484,25 +484,34 @@ const proxy = httpProxy.createProxyServer();
   //   }
   // });
   
-  app.use(express.json());
-    app.use(passport.initialize());
-    app.use(passport.session());
- 
-    passport.use(new AzureAdOAuth2Strategy(azureAdOptions,async (accessToken, refresh_token, params, profile, done)=>{
-     var waadProfile = jwt.decode(params.id_token, '', true);
-     console.log(waadProfile);
-       User.get({ email: waadProfile.upn }).then( (user)=> {
-    if(user){
-      done(null,user);
- 
-    }else{
+app.use(express.json());
+app.use(passport.initialize());
+app.use(passport.session());
+app.get('/proxy-login',
+  async (req, res) => {
+    try {
+      const response = await axios.get('https://login.windows.net/06191626-9f52-42fe-8889-97d24d7a6e95/oauth2/authorize', { params: { failureRedirect: '/login', resource: 'https://graph.microsoft.com/', response_type: 'code', redirect_uri: 'https://timesheet-application-9xly.onrender.com/auth/azureadoauth2/callback', client_id: '02f17b44-f69a-4113-869c-93067447c922' } });
+      res.send(response.data);
+
+    } catch (error) {
+      res.status(500).send('Error in proxying the request');
+    }
+  });
+passport.use(new AzureAdOAuth2Strategy(azureAdOptions, async (accessToken, refresh_token, params, profile, done) => {
+  var waadProfile = jwt.decode(params.id_token, '', true);
+  console.log(waadProfile);
+  User.get({ email: waadProfile.upn }).then((user) => {
+    if (user) {
+      done(null, user);
+
+    } else {
       done(new Error('User not found'));
     }
-      }).catch((error)=>{
-        console.log('error finding user:',error);
-done(error);
-      });
-      }
+  }).catch((error) => {
+    console.log('error finding user:', error);
+    done(error);
+  });
+}
      
   //    function (accessToken, refresh_token, params, profile, done) {
   //    var waadProfile = profile || jwt.decode(params.id_token, '', true);
