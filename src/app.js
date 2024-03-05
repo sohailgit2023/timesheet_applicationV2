@@ -448,7 +448,7 @@ require('./db/config')
       secret: 'secret',
       resave: true,
       saveUninitialized: true,
-      cookie: { secure: false } // Use secure cookies with HTTPS
+      cookie: { secure: true } // Use secure cookies with HTTPS
     }));
     // const corsOptions ={
   //     origin:'https://sprightly-taffy-45cd64.netlify.app', 
@@ -457,25 +457,25 @@ require('./db/config')
   // }
   // app.use(cors({origin: true, credentials: true}));
 
-app.use((req, res, next) => {
-  const origin = req.headers.origin || '*';
-  console.log(origin);
-  const allowedOrigins = ['https://sprightly-taffy-45cd64.netlify.app'];
-if (allowedOrigins.includes(origin)) {
-  res.setHeader('Access-Control-Allow-Origin', origin);
-}
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  if(req.method==='OPTIONS'){
-    // res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
-    // res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    res.status(200).end();
-  }
-  else{
-    next();
-  }
-});
+  app.use((req, res, next) => {
+    const origin = req.headers.origin || '';
+    const allowedOrigins = ['https://sprightly-taffy-45cd64.netlify.app'];
+  
+    if (allowedOrigins.includes(origin)) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+    }
+  
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+  
+    if (req.method === 'OPTIONS') {
+      res.status(200).end();
+    } else {
+      next();
+    }
+  });
+  
   app.use(express.json());
     app.use(passport.initialize());
     app.use(passport.session());
