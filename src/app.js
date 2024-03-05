@@ -450,12 +450,20 @@ require('./db/config')
       saveUninitialized: true,
       cookie: { secure: false } // Use secure cookies with HTTPS
     }));
-    const corsOptions ={
-      origin:'https://sprightly-taffy-45cd64.netlify.app', 
-      credentials:true,            //access-control-allow-credentials:true
-      optionSuccessStatus:200
-  }
-  app.use(cors({origin: true, credentials: true}));
+    // const corsOptions ={
+  //     origin:'https://sprightly-taffy-45cd64.netlify.app', 
+  //     credentials:true,            //access-control-allow-credentials:true
+  //     optionSuccessStatus:200
+  // }
+  // app.use(cors({origin: true, credentials: true}));
+
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', 'https://sprightly-taffy-45cd64.netlify.app');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  next();
+});
   app.use(express.json());
     app.use(passport.initialize());
     app.use(passport.session());
