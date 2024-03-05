@@ -194,8 +194,6 @@ module.exports.getOneEmployeeByEmail= (req,resp,email)=>{
             isLead:isLead,
             leadId:leadId
         }
-        const session = await mongoose.startSession();
-        session.startTransaction();
         try { 
             const selectParams = {
                _id:0
@@ -218,13 +216,13 @@ module.exports.getOneEmployeeByEmail= (req,resp,email)=>{
                                             $set: { 
                                                isLead:true }
                                         }
-                                        Employee.findAndUpdate({employeeId:leadId},data,option,{session}).then((Updated)=>{
+                                        Employee.findAndUpdate({employeeId:leadId},data,option).then((Updated)=>{
                                             Employee.create(employeeData).then(employee=>{
                                                 const leadHistoryData={
                                                     employeeId:employeeData.employeeId,
                                                     leadName:leadObject.fullName,
                                                     leadId:leadId,
-                                                   effectiveDate:effectiveDate.toLocaleDateString('en-US', {
+                                                   effectiveDate:new Date().toLocaleDateString('en-US', {
                                                     day: '2-digit',
                                                     month: 'short',
                                                     year: 'numeric'
@@ -310,6 +308,7 @@ module.exports.getOneEmployeeByEmail= (req,resp,email)=>{
                     const option={
                         new:true
                     }
+                    let employeeObject=new Object(existing)
                     Employee.get({employeeId:postData.leadId}).then(lead=>{
                        if (lead) {
                          let leadObject=new Object(lead)
@@ -328,8 +327,24 @@ module.exports.getOneEmployeeByEmail= (req,resp,email)=>{
                                 }
                                 if(employee){
                                     LeadHistory(leadHistoryData).save().then(lead=>{
-                                        return helpers.success(resp, employee);
-                                    })
+                                        if(lead){
+                                            Employee.get({leadId:employeeObject.leadId}).then(emp=>{
+                                                if(!emp){
+                                                    Employee.findAndUpdate({employeeId:employeeObject.leadId},{isLead:false},option).then(result=>{
+                                                        if(result){
+                                                            return helpers.success(resp, employee);
+                                                        }
+                                                    })
+                                                } 
+                                                else{
+                                                    return helpers.success(resp, employee);
+                                                }
+                                            })
+                                        }
+                                        else{
+                                            return helpers.error(resp, 'Something went wrong');
+                                        }  
+                                    })  
                                 }
                                 else{
                                     return helpers.error(resp, 'Something went wrong');
@@ -356,7 +371,18 @@ module.exports.getOneEmployeeByEmail= (req,resp,email)=>{
                                         if(leadUpdated){
                                             LeadHistory(leadHistoryData).save().then(lead=>{
                                                 if(lead){
-                                                    return helpers.success(resp, employee);
+                                                    Employee.get({leadId:employeeObject.leadId}).then(emp=>{
+                                                        if(!emp){
+                                                            Employee.findAndUpdate({employeeId:employeeObject.leadId},{isLead:false},option).then(result=>{
+                                                                if(result){
+                                                                    return helpers.success(resp, employee);
+                                                                }
+                                                            })
+                                                        }
+                                                        else{
+                                                            return helpers.success(resp, employee);
+                                                        }
+                                                    })
                                                 }
                                                 else{
                                                     return helpers.error(resp, 'Something went wrong');
