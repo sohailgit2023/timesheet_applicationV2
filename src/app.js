@@ -423,17 +423,21 @@
 
 
 const express = require('express');
-  // require('./config')
-  require('dotenv').config();
+const httpProxy = require('http-proxy');
+// require('./config')
+require('dotenv').config();
 require('./db/config')
-    const passport = require('passport');
-    const session = require('express-session');
-    const cors=require('cors')
-    const AzureAdOAuth2Strategy = require('passport-azure-ad-oauth2').Strategy;
-   const User=require('./models/Employee')
-   const jwt=require('jsonwebtoken')
-   const EmployeeController = require('./controller/employeeController');
-    const app = express();
+const passport = require('passport');
+const session = require('express-session');
+const cors = require('cors')
+const AzureAdOAuth2Strategy = require('passport-azure-ad-oauth2').Strategy;
+const User = require('./models/Employee')
+const jwt = require('jsonwebtoken')
+const EmployeeController = require('./controller/employeeController');
+const app = express();
+const proxy = httpProxy.createProxyServer();
+
+
    
     // Use environment variables for sensitive information
     const azureAdOptions = {
@@ -450,6 +454,10 @@ require('./db/config')
       saveUninitialized: true,
       cookie: { secure: true } // Use secure cookies with HTTPS
     }));
+    app.use('/login', (req, res) => {
+      proxy.web(req, res, { target: 'https://login.windows.net' });
+    });
+    
     // const corsOptions ={
   //     origin:'https://sprightly-taffy-45cd64.netlify.app', 
   //     credentials:true,            //access-control-allow-credentials:true
@@ -457,24 +465,24 @@ require('./db/config')
   // }
   // app.use(cors({origin: true, credentials: true}));
 
-  app.use((req, res, next) => {
-    const origin = req.headers.origin || '';
-    const allowedOrigins = ['https://sprightly-taffy-45cd64.netlify.app'];
+  // app.use((req, res, next) => {
+  //   const origin = req.headers.origin || '';
+  //   const allowedOrigins = ['https://sprightly-taffy-45cd64.netlify.app'];
   
-    if (allowedOrigins.includes(origin)) {
-      res.setHeader('Access-Control-Allow-Origin', origin);
-    }
+  //   if (allowedOrigins.includes(origin)) {
+  //     res.setHeader('Access-Control-Allow-Origin', origin);
+  //   }
   
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
+  //   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+  //   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  //   res.setHeader('Access-Control-Allow-Credentials', 'true');
   
-    if (req.method === 'OPTIONS') {
-      res.status(200).end();
-    } else {
-      next();
-    }
-  });
+  //   if (req.method === 'OPTIONS') {
+  //     res.status(200).end();
+  //   } else {
+  //     next();
+  //   }
+  // });
   
   app.use(express.json());
     app.use(passport.initialize());
