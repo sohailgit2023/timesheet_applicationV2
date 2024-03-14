@@ -1,10 +1,10 @@
 const mongoose = require('mongoose');
 const Employee= require('./../models/Employee')
 const LeadHistory=require('./../models/LeadHistory')
-//const moment = require('moment');
+ 
 // const Project = require('./../models/Project');
 const helpers = require('./../helper/helper');
-
+ 
 module.exports.getOneEmployee= (req,resp,leadId)=>{
     const selectParams = {
         _id:0
@@ -18,117 +18,56 @@ module.exports.getOneEmployee= (req,resp,leadId)=>{
                 from: 'leads',
                 localField: "employeeId",
                 foreignField: "employeeId",
-                as: "lead_Info",
+                as: "lead_Info"
             }
         },
+        // {
+        //     $match:{"lead_Info.effectiveDate":{$lte:[]}}
+        // },
         {
-            $unwind: {
-                path: "$lead_Info",
-                preserveNullAndEmptyArrays: true
+            $project: {
+               _id:0,
             }
         },
-
-        {
-            $sort: { "lead_Info.effectiveDate": -1 }
-        },
-        {
-            $group: {
-                _id: "$_id",
-                employee: { $first: "$$ROOT" },
-                lead_Info: { $first: "$lead_Info" },
-
-            }
-        },
-        {
-            $replaceRoot: {
-                newRoot: {
-                    $mergeObjects: ["$employee", {
-                        lead_Info: "$lead_Info",
-                    }]
-                }
-            }
-        },
-        {
-            $sort: { employeeId: 1 }
-        },
-    ];
-
+        // {
+        //     $unwind: "$lead_Info"
+        // },
+       
+    ]
   Employee.aggregation(pipeline).then(employee=>{
     if(employee){
         return helpers.success(resp, employee);
     }
     else{
-        return helpers.error(resp,'Something went wrong');
+        return helpers.error(resp,'Something went wrong')
     }
   })
+ 
 }
-
-module.exports.getOneEmployeeByEmail= (req,resp,email)=>{
-    const selectParams = {
-        _id:0
-    };
-    console.log(email);
-    const pipeline = [
-        {
-            $match: { email:  new RegExp('^' + email + '$', 'i') }
-        },
-        {
-            $lookup: {
-                from: 'leads',
-                localField: "employeeId",
-                foreignField: "employeeId",
-                as: "lead_Info",
-            }
-        },
-        {
-            $unwind: {
-                path: "$lead_Info",
-                preserveNullAndEmptyArrays: true
-            }
-        },
-
-        {
-            $sort: { "lead_Info.effectiveDate": -1 }
-        },
-        {
-            $group: {
-                _id: "$_id",
-                employee: { $first: "$$ROOT" },
-                lead_Info: { $first: "$lead_Info" },
-
-            }
-        },
-        {
-            $replaceRoot: {
-                newRoot: {
-                    $mergeObjects: ["$employee", {
-                        lead_Info: "$lead_Info",
-                    }]
-                }
-            }
-        },
-        {
-            $sort: { employeeId: 1 }
-        },
-    ];
-
-  Employee.aggregation(pipeline).then(employee=>{
-    console.log(employee);
-    if(employee){
-        return helpers.success(resp, employee);
-    }
-    else{
-        return helpers.error(resp,'Something went wrong');
-    }
-  })
-}
-
-
-
     module.exports.getAllEmployee= (req,resp)=>{
         const selectParams = {
             _id:0
         };
+        // const pipeline = [
+        //     {
+        //         $lookup: {
+        //             from: 'leads',
+        //             localField: "employeeId",
+        //             foreignField: "employeeId",
+        //             as: "lead_Info"
+        //         }
+        //     },
+        //     {
+        //         $project: {
+        //            _id:0,
+        //         }
+        //     },
+        //     // {
+        //     //     $unwind: "$lead_Info"
+        //     // },
+           
+        // ]
+ 
         const pipeline = [
             {
                 $lookup: {
@@ -167,7 +106,8 @@ module.exports.getOneEmployeeByEmail= (req,resp,email)=>{
             },
             {
                 $sort: { employeeId: 1 }
-            },
+            }
+ 
         ]
       Employee.aggregation(pipeline).then(employee=>{
         if(employee){
@@ -177,10 +117,67 @@ module.exports.getOneEmployeeByEmail= (req,resp,email)=>{
             return helpers.error(resp,'Something went wrong')
         }
       })
-      
+     
     }
-
-
+    module.exports.getOneEmployeeByEmail= (req,resp,email)=>{
+        const selectParams = {
+            _id:0
+        };
+        console.log(email);
+        const pipeline = [
+            {
+                $match: { email:  new RegExp('^' + email + '$', 'i') }
+            },
+            {
+                $lookup: {
+                    from: 'leads',
+                    localField: "employeeId",
+                    foreignField: "employeeId",
+                    as: "lead_Info",
+                }
+            },
+            {
+                $unwind: {
+                    path: "$lead_Info",
+                    preserveNullAndEmptyArrays: true
+                }
+            },
+     
+            {
+                $sort: { "lead_Info.effectiveDate": -1 }
+            },
+            {
+                $group: {
+                    _id: "$_id",
+                    employee: { $first: "$$ROOT" },
+                    lead_Info: { $first: "$lead_Info" },
+     
+                }
+            },
+            {
+                $replaceRoot: {
+                    newRoot: {
+                        $mergeObjects: ["$employee", {
+                            lead_Info: "$lead_Info",
+                        }]
+                    }
+                }
+            },
+            {
+                $sort: { employeeId: 1 }
+            },
+        ];
+     
+      Employee.aggregation(pipeline).then(employee=>{
+        console.log(employee);
+        if(employee){
+            return helpers.success(resp, employee);
+        }
+        else{
+            return helpers.error(resp,'Something went wrong');
+        }
+      })
+    }
     module.exports.registerEmployee=async (req,resp,postData)=>{
         let {fName, lName, email, gender,leadId, isLead}=postData
         // console.log("asdfgnm,");
@@ -192,9 +189,14 @@ module.exports.getOneEmployeeByEmail= (req,resp,email)=>{
             email:email,
             gender:gender,
             isLead:isLead,
-            leadId:leadId
+            leadId:leadId,
+            effectiveDate:new Date().toLocaleDateString('en-US', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric'
+            })
         }
-        try { 
+        try {
             const selectParams = {
                _id:0
             };
@@ -213,7 +215,7 @@ module.exports.getOneEmployeeByEmail= (req,resp,email)=>{
                                             new: true
                                         }
                                         const data={
-                                            $set: { 
+                                            $set: {
                                                isLead:true }
                                         }
                                         Employee.findAndUpdate({employeeId:leadId},data,option).then((Updated)=>{
@@ -256,12 +258,12 @@ module.exports.getOneEmployeeByEmail= (req,resp,email)=>{
                                                     return helpers.success(resp, employee);
                                                 })
                                                 // return helpers.success(resp, employee);
-                                            } 
+                                            }
                                         })
                                     }
                                 }
                                 else{
-                                    Employee.create(employeeData).then(employee=>{ 
+                                    Employee.create(employeeData).then(employee=>{
                                         const leadHistoryData={
                                             employeeId:employeeData.employeeId,
                                             leadName:leadObject.fullName,
@@ -299,7 +301,7 @@ module.exports.getOneEmployeeByEmail= (req,resp,email)=>{
         }
     }
    
-
+ 
     module.exports.updateEmployee=(req, resp, param, postData)=>{
         let employeeId=param
         try {
@@ -313,6 +315,11 @@ module.exports.getOneEmployeeByEmail= (req,resp,email)=>{
                        if (lead) {
                          let leadObject=new Object(lead)
                          postData.leadName=leadObject.fullName
+                         postData.effectiveDate=new Date().toLocaleDateString('en-US', {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric'
+                        })
                          if(leadObject.isLead==='true'){
                             Employee.findAndUpdate({employeeId:employeeId},postData,option).then(employee=>{
                                 const leadHistoryData={
@@ -335,7 +342,7 @@ module.exports.getOneEmployeeByEmail= (req,resp,email)=>{
                                                             return helpers.success(resp, employee);
                                                         }
                                                     })
-                                                } 
+                                                }
                                                 else{
                                                     return helpers.success(resp, employee);
                                                 }
@@ -349,7 +356,7 @@ module.exports.getOneEmployeeByEmail= (req,resp,email)=>{
                                 else{
                                     return helpers.error(resp, 'Something went wrong');
                                 }
-                                
+                               
                             }).catch(err=>{
                                 return helpers.error(resp, 'Something went wrong');
                              });
@@ -398,12 +405,12 @@ module.exports.getOneEmployeeByEmail= (req,resp,email)=>{
                                 else{
                                     return helpers.error(resp, 'Something went wrong');
                                 }
-                                
+                               
                             }).catch(err=>{
                                 return helpers.error(resp, 'Something went wrong');
                              });
                          }
-                        
+                       
                        }
                        else{
                         helpers.validationError(resp,'Lead not exist')
@@ -424,10 +431,11 @@ module.exports.getOneEmployeeByEmail= (req,resp,email)=>{
         }
     }
    
-
+ 
+ 
     module.exports.deleteEmployee=(req, resp, param)=>{
        let employeeId=param
-      
+     
        try{
         //this.updateEmployee(req,resp,employeeId,{status:'inactive'})
         Employee.get({employeeId:employeeId},{}).then(employee=>{
@@ -439,8 +447,9 @@ module.exports.getOneEmployeeByEmail= (req,resp,email)=>{
                     gender:employee.gender,
                     status:'inactive',
                     leadId:0,
-                    leadName:"",
-                    isLead:false
+                    leadName:" ",
+                    isLead:false,
+                    effectiveDate:" "
                 }
                 // updateData=JSON.parse(updateData)
                 const option={
@@ -460,18 +469,17 @@ module.exports.getOneEmployeeByEmail= (req,resp,email)=>{
                  else{
                     helpers.error(resp,'already unlisted from active employee')
                  }
-            
+           
             }
             else{
                 helpers.validationError(resp,"Employee not found",404)
             }
         })
-        
+       
        }
        catch(err){
         console.log(err);
        }
     }
    
-
-
+ 

@@ -44,6 +44,10 @@ const employeeSchema = new mongoose.Schema({
     leadName:{
         type:String,
         required: true,
+    },
+    effectiveDate:{
+        type:String,
+        required:true
     }
 },{versionKey:false});
 employeeModel = mongoose.model("employees", employeeSchema);

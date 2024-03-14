@@ -665,7 +665,7 @@ app.put('/updateEmployee/:id', (req, resp) => {
     EmployeeController.updateEmployee(req, resp, employeeId, formdata);
 });
 
-app.put('/deleteEmployee/:id', (req, resp) => {
+app.delete('/deleteEmployee/:id', (req, resp) => {
     const employeeId = parseInt(req.params.id);
     EmployeeController.deleteEmployee(req, resp, employeeId)
 });
