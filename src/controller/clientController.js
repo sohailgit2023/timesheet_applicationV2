@@ -125,15 +125,23 @@ module.exports.registerClient = (req, resp, postData) => {
     module.exports.updateClient=(req, resp, param, postData)=>{
         let clientId=param
         try {
-             Client.get({$and:[{clientId:clientId},{name:postData.name}]},{}).then(existing=>{
+            const option = {
+                new: true
+            }
+           // console.log(postData.name);
+           var updateData={
+            status:postData.status
+           }
+            Client.get({$and:[{clientId:clientId}]},{}).then(client=>{
+               const clientObject=new Object(client)
+               if(postData.name!==clientObject.name){
+                updateData.name=postData.name
+               }
+               Client.get({name:updateData.name},{}).then(existing=>{
                 if(!existing){
-                    const option={
-                        new:true
-                    }
-                    Client.findAndUpdate({clientId:clientId},postData,option).then(client=>{
-                        if(client){
-                            
-                            return helpers.success(resp,client)
+                    Client.findAndUpdate({clientId:clientId},updateData,option).then(client1=>{
+                        if(client1){
+                            return helpers.success(resp,client1)
                         }
                         else{
                             return helpers.error(resp, 'Something went wrong');
@@ -144,17 +152,22 @@ module.exports.registerClient = (req, resp, postData) => {
                      });
                 }
                 else{
-                    return helpers.error(resp, 'Client already Exists', 403);
+                    return helpers.error(resp, 'Client already exists',403);
                 }
+               })
              }).catch(err=>{
                 console.log(err);
              });
+          
+             
         }
         catch (e) {
             console.log(e);
             return helpers.error(resp, 'Server Error');
         }
     }
+
+    
     module.exports.deleteClient = (req, resp, param) => {
         Client.get({ clientId: param }).then(client => {
             if (client) {

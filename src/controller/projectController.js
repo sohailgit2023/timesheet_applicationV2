@@ -148,30 +148,38 @@ module.exports.registerProject = (req, resp, postData) => {
 module.exports.updateProject = (req, resp, param, postData) => {
     let projectId = param
     try {
+        const updateData={
+            notes:postData.notes,
+            descriptions:postData.descriptions,
+            clientId:postData.clientId
+        }
         Project.get({ projectId: projectId }, {}).then(existing => {
             if (existing) {
                 const option = {
                     new: true
                 }
                 let projectObject=new Object(existing);
-                Project.get({$and:[{clientId:projectObject.clientId},{name:postData.name}]}).then(exsist=>{
-                    if(!exsist){
-                        Project.findAndUpdate({ projectId: projectId }, postData, option).then(project => {
-                            if (project) {
-                                return helpers.success(resp, project)
-                            }
-                            else {
-                                return helpers.error(resp, 'Something went wrong');
-                            }
-        
-                        }).catch(err => {
+               if(postData.name!==projectObject.name){
+                updateData.name=postData.name
+               }
+               Project.get({name:updateData.name},{}).then(project1=>{
+                if(!project1){
+                    Project.findAndUpdate({ projectId: projectId }, postData, option).then(project => {
+                        if (project) {
+                            return helpers.success(resp, project)
+                        }
+                        else {
                             return helpers.error(resp, 'Something went wrong');
-                        });
-                    }
-                    else{
-                        return helpers.error(resp, 'Project already exist', 403);
-                    }
-                })
+                        }
+    
+                    }).catch(err => {
+                        return helpers.error(resp, 'Something went wrong');
+                    });
+                }
+                else{
+                    return helpers.error(resp, 'Project already exists',403);
+                }
+               })
                
             }
             else {

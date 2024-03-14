@@ -20,6 +20,24 @@ module.exports.MyDashboard = (req, resp, employeeId) => {
         },
         {
             $lookup: {
+                from: 'leads',
+                localField: "employeeId",
+                foreignField: "employeeId",
+                as: "lead_Info",
+            }
+        },
+        {
+            $unwind: {
+                path: "$lead_Info",
+                preserveNullAndEmptyArrays: true
+            }
+        },
+
+        {
+            $sort: { "lead_Info.effectiveDate": -1 }
+        },
+        {
+            $lookup: {
                 from: 'timesheets',
                 localField: "employeeId",
                 foreignField: "employeeId",
@@ -80,6 +98,7 @@ module.exports.MyDashboard = (req, resp, employeeId) => {
                 count_rejected: { $sum: { $cond: [{ $eq: ["$my_timesheets_Info.status", "rejected"] }, 1, 0] } },
                 count_submit: { $sum: { $cond: [{ $eq: ["$my_timesheets_Info.status", "submit"] }, 1, 0] } },
                 employee_Info: { $first: "$employee_Info" },
+                lead_Info: { $first: "$lead_Info" },
                 project_Info:{$first: "$project_Info"},
                 client_Info: { $first: "$client_Info" },
                 task_Info: { $first: "$task_Info" },
@@ -96,10 +115,13 @@ module.exports.MyDashboard = (req, resp, employeeId) => {
                     rejected: "$count_rejected",
                     submit: "$count_submit"
                 },
+                // lead_Info:1,
                 client_Info: 1,
                 //project_Info: 1,
                // my_timesheets: 1,
-                employee_Info: { $arrayElemAt: ['$employee_Info', 0] },
+                // employee_Info: { $arrayElemAt: ['$employee_Info', 0] },
+                employee_Info: { $mergeObjects: [ { $arrayElemAt: ['$employee_Info', 0] },
+                 {lead_Info:'$lead_Info'} ]},
                 WeeklyTimesheet: {
                     $map: {
                         input: "$my_timesheets",
