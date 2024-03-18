@@ -440,7 +440,7 @@
 // // const proxy = httpProxy.createProxyServer();
 
 
-   
+
 // //     // Use environment variables for sensitive information
 // //     const azureAdOptions = {
 // //       clientID: "02f17b44-f69a-4113-869c-93067447c922",
@@ -449,7 +449,7 @@
 // //       resource: 'https://graph.microsoft.com/',
 // //       tenant: '06191626-9f52-42fe-8889-97d24d7a6e95',
 // //     };
-   
+
 // //     app.use(session({  
 // //       secret: 'secret',
 // //       resave: true,
@@ -459,7 +459,7 @@
 // //     // app.use('/login', (req, res) => {
 // //     //   proxy.web(req, res, { target: 'https://login.windows.net' });
 // //     // });
-    
+
 // //     // const corsOptions ={
 // //   //     origin:'https://sprightly-taffy-45cd64.netlify.app', 
 // //   //     credentials:true,            //access-control-allow-credentials:true
@@ -470,22 +470,22 @@
 // //   // app.use((req, res, next) => {
 // //   //   const origin = req.headers.origin || '';
 // //   //   const allowedOrigins = ['https://sprightly-taffy-45cd64.netlify.app'];
-  
+
 // //   //   if (allowedOrigins.includes(origin)) {
 // //   //     res.setHeader('Access-Control-Allow-Origin', origin);
 // //   //   }
-  
+
 // //   //   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
 // //   //   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 // //   //   res.setHeader('Access-Control-Allow-Credentials', 'true');
-  
+
 // //   //   if (req.method === 'OPTIONS') {
 // //   //     res.status(200).end();
 // //   //   } else {
 // //   //     next();
 // //   //   }
 // //   // });
-  
+
 // // app.use(express.json());
 // // app.use(passport.initialize());
 // // app.use(passport.session());
@@ -514,36 +514,36 @@
 // //     done(error);
 // //   });
 // // }
-     
+
 // //   //    function (accessToken, refresh_token, params, profile, done) {
 // //   //    var waadProfile = profile || jwt.decode(params.id_token, '', true);
-   
+
 // //   //    User.find({ email: waadProfile.email }).then((err, user)=> {
 // //   //       done(err, user);
 // //   //     })
 // //   //   }
 // //     ));
-   
-   
-   
+
+
+
 // //     passport.serializeUser((user, done) => {
 // //       // Serialize the user ID or other non-sensitive information
 // //       console.log(user.email)
 // //       done(null, user);  
 // //     });
-   
+
 // //     passport.deserializeUser((user, done) => {
 // //       // Retrieve the user object from a database
-   
+
 // //       // User.findOne({ email: email }, (err, user) => {
 // //       //   done(err, user);
 // //       // });    
 // //       done(null,user);
 // //     });
 // //   app.get('/login', passport.authenticate('azure_ad_oauth2',{ failureRedirect: '/login' }));
-   
+
 // //   //   app.post('/login', passport.authenticate('azure_ad_oauth2'));
-   
+
 // //     app.get('/auth/azureadoauth2/callback', passport.authenticate('azure_ad_oauth2',
 // //     { failureRedirect: '/login',successRedirect:'/success' }), (req, res) => {
 // //       // Authentication successful, redirect to a different route
@@ -567,31 +567,31 @@
 // //       }
 // //       // console.log('login successful');
 // //     });
- 
+
 // //     // app.get('/success',async(req,res)=>{
 // //     //   if(req.user){
 // //     //     res.status(200).json({message:"Login successful",user:req.user})
- 
+
 // //     //   }else{
 // //     //     res.status(401).json({message:"Not authenticated"})
 // //     //   }
 // //     // })
- 
+
 // //     app.get('/employee',isAuthenticated,(req,resp)=> {
 // //       EmployeeController.getAllEmployee(req, resp)
 // //     });
- 
+
 // //     // if (path.match(/^\/employee\/([0-9]+)$/) && method === 'GET') {
 // //     //   const param = path.split("/")
 // //     //   const leadId = parseInt(param[2])
 // //     //   EmployeeController.getOneEmployee(req, resp,leadId)
 // //     // }
- 
+
 // //     app.get('/employee/:id',isAuthenticated,(req,resp)=> {
 // //       const leadId = parseInt(req.params.id);
 // //       EmployeeController.getOneEmployee(req, resp,leadId);
 // //     });
- 
+
 // //   app.get("/logout",function (req, res, next) {
 // //     req.session.destroy(function(err){
 // //       if (err) {
@@ -621,12 +621,13 @@ const EmployeeController = require('./controller/employeeController');
 const ClientController = require('./controller/clientController');
 const ProjectController = require('./controller/projectController')
 const ChargeActivityController = require('./controller/chargeActivityController')
-const TaskController=require('./controller/taskController')
-const TimesheetSettingController=require('./controller/timesheetSettingController')
+const TaskController = require('./controller/taskController')
+const TimesheetSettingController = require('./controller/timesheetSettingController')
 const { log } = require('console');
-const MyTimesheetController=require('./controller/myTimesheetController')
-const ApprovalController=require('./controller/approvalController')
-const DashboardController=require('./controller/dashboardController')
+const MyTimesheetController = require('./controller/myTimesheetController')
+const ApprovalController = require('./controller/approvalController')
+const DashboardController = require('./controller/dashboardController')
+const HolidayController = require('./controller/holidayController')
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -637,7 +638,7 @@ app.use((req, res, next) => {
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
     next();
-  });
+});
 
 app.get('/employee', (req, resp) => {
     EmployeeController.getAllEmployee(req, resp)
@@ -648,20 +649,20 @@ app.get('/employee/:leadId', (req, resp) => {
     EmployeeController.getOneEmployee(req, resp, leadId);
 });
 
-app.get('/employee/email/:email',(req,resp)=>{
-    const email=req.params.email
-    EmployeeController.getOneEmployeeByEmail(req,resp,email)
+app.get('/employee/email/:email', (req, resp) => {
+    const email = req.params.email
+    EmployeeController.getOneEmployeeByEmail(req, resp, email)
 })
 
-app.post('/addEmployee',(req,resp)=>{
+app.post('/addEmployee', (req, resp) => {
     console.log(req.body);
-    const formdata= req.body
+    const formdata = req.body
     EmployeeController.registerEmployee(req, resp, formdata);
 })
 
 app.put('/updateEmployee/:id', (req, resp) => {
     const employeeId = parseInt(req.params.id);
-    const formdata= req.body
+    const formdata = req.body
     EmployeeController.updateEmployee(req, resp, employeeId, formdata);
 });
 
@@ -670,51 +671,51 @@ app.delete('/deleteEmployee/:id', (req, resp) => {
     EmployeeController.deleteEmployee(req, resp, employeeId)
 });
 
-app.get('/client', (req, resp) => 
-{ 
+app.get('/client', (req, resp) => {
     ClientController.getAllClient(req, resp);
- });
- app.get('/client/:id', (req, resp) =>
- {   
-  const clientId = parseInt(req.params.id);  
-   ClientController.getClientByEmployee(req, resp, clientId);
- }); 
-app.post('/addClient', async (req, resp) => { 
-    try {   
-      const formdata = req.body; 
-        ClientController.registerClient(req, resp, formdata);  
-   } 
-catch (error) {    
-     console.log(error); 
-    } }
-    );
-    
-app.put('/updateClient/:id',(req,resp)=>{
-    const clientId = parseInt(req.params.id);  
-   try {     
-    const formdata = req.body
-      ClientController.updateClient(req, resp, clientId, formdata); 
-    } catch (error) {   
-      console.log(error);  
-   }
-})
-app.delete('/deleteClient/:id', (req, resp) => {    
- const clientId = parseInt(req.params.id);  
-   try {      
-   ClientController.deleteClient(req, resp, clientId);   
-  } catch (error) {   
-      console.log(error);    
- } });
+});
+app.get('/client/:id', (req, resp) => {
+    const clientId = parseInt(req.params.id);
+    ClientController.getClientByEmployee(req, resp, clientId);
+});
+app.post('/addClient', async (req, resp) => {
+    try {
+        const formdata = req.body;
+        ClientController.registerClient(req, resp, formdata);
+    }
+    catch (error) {
+        console.log(error);
+    }
+}
+);
 
- app.get('/project', (req, resp) => {
+app.put('/updateClient/:id', (req, resp) => {
+    const clientId = parseInt(req.params.id);
+    try {
+        const formdata = req.body
+        ClientController.updateClient(req, resp, clientId, formdata);
+    } catch (error) {
+        console.log(error);
+    }
+})
+app.delete('/deleteClient/:id', (req, resp) => {
+    const clientId = parseInt(req.params.id);
+    try {
+        ClientController.deleteClient(req, resp, clientId);
+    } catch (error) {
+        console.log(error);
+    }
+});
+
+app.get('/project', (req, resp) => {
     ProjectController.getAllProject(req, resp);
 });
- 
+
 app.get('/project/:id', (req, resp) => {
     const projectId = parseInt(req.params.id);
     ProjectController.getOneProject(req, resp, projectId);
 });
- 
+
 app.post('/addProject', async (req, resp) => {
     try {
         const formdata = req.body;
@@ -723,8 +724,8 @@ app.post('/addProject', async (req, resp) => {
         console.log(error);
     }
 });
- 
-app.put('/updateProject/:id',(req, resp) => {
+
+app.put('/updateProject/:id', (req, resp) => {
     const projectId = parseInt(req.params.id);
     try {
         const formdata = req.body;
@@ -733,7 +734,7 @@ app.put('/updateProject/:id',(req, resp) => {
         console.log(error);
     }
 });
- 
+
 app.delete('/deleteProject/:id', (req, resp) => {
     const projectId = parseInt(req.params.id);
     try {
@@ -746,12 +747,12 @@ app.delete('/deleteProject/:id', (req, resp) => {
 app.get('/chargeactivity', (req, resp) => {
     ChargeActivityController.getAllChargeActivity(req, resp);
 });
- 
+
 app.get('/chargeactivity/:id', (req, resp) => {
     const chargeActivityId = parseInt(req.params.id);
     ChargeActivityController.getOneChargeActivity(req, resp, chargeActivityId);
 });
- 
+
 app.post('/addChargeActivity', async (req, resp) => {
     console.log("activity");
     try {
@@ -761,7 +762,7 @@ app.post('/addChargeActivity', async (req, resp) => {
         console.log(error);
     }
 });
- 
+
 app.put('/updateChargeActivity/:id', async (req, resp) => {
     const chargeActivityId = parseInt(req.params.id);
     try {
@@ -771,7 +772,7 @@ app.put('/updateChargeActivity/:id', async (req, resp) => {
         console.log(error);
     }
 });
- 
+
 app.delete('/deleteChargeActivity/:id', (req, resp) => {
     const chargeActivityId = parseInt(req.params.id);
     try {
@@ -784,12 +785,12 @@ app.delete('/deleteChargeActivity/:id', (req, resp) => {
 app.get('/task', (req, resp) => {
     TaskController.getAllTask(req, resp);
 });
- 
+
 app.get('/task/:id', (req, resp) => {
     const employeeId = parseInt(req.params.id);
     TaskController.getOneTask(req, resp, employeeId);
 });
- 
+
 app.post('/addTask', async (req, resp) => {
     try {
         const formdata = req.body;
@@ -798,7 +799,7 @@ app.post('/addTask', async (req, resp) => {
         console.log(error);
     }
 });
- 
+
 app.put('/updateTask/:id', async (req, resp) => {
     const taskId = parseInt(req.params.id);
     try {
@@ -808,7 +809,7 @@ app.put('/updateTask/:id', async (req, resp) => {
         console.log(error);
     }
 });
- 
+
 app.delete('/deleteTask/:id', (req, resp) => {
     const taskId = parseInt(req.params.id);
     try {
@@ -821,12 +822,12 @@ app.delete('/deleteTask/:id', (req, resp) => {
 app.get('/timesheetsetting', (req, resp) => {
     TimesheetSettingController.getAllTimesheetSetting(req, resp);
 });
- 
+
 app.get('/timesheetsetting/:id', (req, resp) => {
     const employeeId = parseInt(req.params.id);
     TimesheetSettingController.getOneTimesheet(req, resp, employeeId);
 });
- 
+
 app.post('/addTimesheetSetting', async (req, resp) => {
     try {
         const formdata = req.body;
@@ -835,7 +836,7 @@ app.post('/addTimesheetSetting', async (req, resp) => {
         console.log(error);
     }
 });
- 
+
 app.put('/updateTimesheetSetting/:id', async (req, resp) => {
     const timesheetId = parseInt(req.params.id);
     try {
@@ -845,7 +846,7 @@ app.put('/updateTimesheetSetting/:id', async (req, resp) => {
         console.log(error);
     }
 });
- 
+
 app.delete('/deleteTimesheetSetting/:id', (req, resp) => {
     const timesheetId = parseInt(req.params.id);
     try {
@@ -854,30 +855,30 @@ app.delete('/deleteTimesheetSetting/:id', (req, resp) => {
         console.log(error);
     }
 });
- 
+
 
 app.get('/mytimesheet/:employeeId', (req, resp) => {
     const employeeId = parseInt(req.params.employeeId);
     MyTimesheetController.getAllMyTimesheet(req, resp, employeeId);
 });
- 
+
 app.get('/mytimesheet/:employeeId/:day/:month/:year', (req, resp) => {
-    
-    const {employeeId,day,month,year}=req.params
-    const week=`${day}/${month}/${year}`
+
+    const { employeeId, day, month, year } = req.params
+    const week = `${day}/${month}/${year}`
     console.log(week);
     MyTimesheetController.getAllWeeklyMyTimesheet(req, resp, parseInt(employeeId), week);
 });
- 
+
 app.post('/addMyTimesheet', async (req, resp) => {
     try {
-        const formdata =req.body;
+        const formdata = req.body;
         MyTimesheetController.registerMyTimesheet(req, resp, formdata);
     } catch (error) {
         console.log(error);
     }
 });
- 
+
 app.put('/updateMyTimesheet/:timesheetId', async (req, resp) => {
     const timesheetId = parseInt(req.params.timesheetId);
     try {
@@ -887,7 +888,7 @@ app.put('/updateMyTimesheet/:timesheetId', async (req, resp) => {
         console.log(error);
     }
 });
- 
+
 app.delete('/deleteMyTimesheet/:timesheetId', (req, resp) => {
     const timesheetId = parseInt(req.params.timesheetId);
     try {
@@ -899,13 +900,13 @@ app.delete('/deleteMyTimesheet/:timesheetId', (req, resp) => {
 
 app.get('/approval/:year/:leadId/:employeeId/:status', (req, resp) => {
     const { year, leadId, employeeId, status } = req.params;
-    ApprovalController.getAllApprovalTimesheet(req, resp, parseInt(year), parseInt(leadId), parseInt(employeeId), status);
+    ApprovalController.getAllApprovalTimesheet(req, resp,  parseInt(leadId),parseInt(year), parseInt(employeeId), status);
 });
 
 app.put('/updateApproval/:timesheetId', (req, resp) => {
     const timesheetId = parseInt(req.params.timesheetId);
-    const formdata = req.body; 
- 
+    const formdata = req.body;
+
     try {
         ApprovalController.updateStatusTimesheet(req, resp, timesheetId, formdata);
     } catch (error) {
@@ -917,17 +918,27 @@ app.get('/mydashboard/:employeeId', (req, resp) => {
     const employeeId = parseInt(req.params.employeeId);
     DashboardController.MyDashboard(req, resp, employeeId);
 });
- 
+
 app.get('/teamdashboard/:employeeId', (req, resp) => {
     const employeeId = parseInt(req.params.employeeId);
     DashboardController.TeamDashboard(req, resp, employeeId);
 });
- 
+
 app.get('/admindashboard', (req, resp) => {
     DashboardController.AdminDashboard(req, resp);
 });
 
-    app.listen(process.env.port, () => {
-      console.log(process.env.port);
-    });
- 
+app.get('/holidays/:year/:startDate', async (req, resp) => {
+    const { year, startDate } = req.params;
+    HolidayController.getHolidays(req, resp, year, startDate)
+
+});
+app.get('/holidays/:year', async (req, resp) => {
+    const { year } = req.params;
+    HolidayController.getHolidaysOfFullYear(req, resp, year)
+
+});
+
+app.listen(process.env.port, () => {
+    console.log(process.env.port);
+});

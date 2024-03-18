@@ -48,26 +48,6 @@ module.exports.getOneEmployee= (req,resp,leadId)=>{
         const selectParams = {
             _id:0
         };
-        // const pipeline = [
-        //     {
-        //         $lookup: {
-        //             from: 'leads',
-        //             localField: "employeeId",
-        //             foreignField: "employeeId",
-        //             as: "lead_Info"
-        //         }
-        //     },
-        //     {
-        //         $project: {
-        //            _id:0,
-        //         }
-        //     },
-        //     // {
-        //     //     $unwind: "$lead_Info"
-        //     // },
-           
-        // ]
- 
         const pipeline = [
             {
                 $lookup: {
