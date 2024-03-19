@@ -882,7 +882,7 @@ app.post('/addMyTimesheet', async (req, resp) => {
 app.put('/updateMyTimesheet/:timesheetId', async (req, resp) => {
     const timesheetId = parseInt(req.params.timesheetId);
     try {
-        const formdata = await postData.getPostData(req);
+        const formdata = req.body;
         MyTimesheetController.updateMyTimesheet(req, resp, timesheetId, formdata);
     } catch (error) {
         console.log(error);
