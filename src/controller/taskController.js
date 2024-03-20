@@ -8,20 +8,29 @@ const TimesheetSetting=require('./../models/Timesheetsetting')
 // const Project = require('./../models/Project');
 const helpers = require('./../helper/helper');
 
-module.exports.getOneTask = (req, resp,employeeId) => {
+
+module.exports.getDirectReporteeAndEmpTask = (req, resp,employeeId) => {
     const selectParams = {
         _id: 0
     };
     const pipeline = [
-        {
-            $match:{employeeId:employeeId}
-        },
         {
             $lookup: {
                 from: 'employees',
                 localField: "employeeId",
                 foreignField: "employeeId",
                 as: "employee_Info"
+            }
+        },
+        {
+            $unwind: "$employee_Info"
+        },
+        {
+            $match: {
+                $or: [
+                    { employeeId: employeeId },
+                    { "employee_Info.leadId": employeeId }
+                ]
             }
         },
         {
@@ -57,8 +66,71 @@ module.exports.getOneTask = (req, resp,employeeId) => {
                 activityType: 1,
                 task: 1,
                 estimatedHours: 1,
+                consumedHours:1,
                 billable: 1,
                 notes: 1,
+ 
+            }
+        },
+        {
+            $unwind: "$client_Info"
+        },
+        {
+            $unwind: "$project_Info",
+        },
+       
+    ]
+    Task.aggregation(pipeline).then(task => {
+        if (task) {
+            return helpers.success(resp, task);
+        }
+        else {
+            return helpers.error(resp, 'Something went wrong');
+        }
+    }).catch(err => {
+        console.log(err);
+    })
+ 
+}
+
+module.exports.getOneTask = (req, resp,employeeId) => {
+    const selectParams = {
+        _id: 0
+    };
+    const pipeline = [
+        {$match:{employeeId:employeeId}},
+        {
+            $lookup: {
+                from: 'employees',
+                localField: "employeeId",
+                foreignField: "employeeId",
+                as: "employee_Info"
+            }
+        },
+        {
+            $lookup: {
+                from: "clients",
+                localField: "clientId",
+                foreignField: "clientId",
+                as: "client_Info"
+            }
+        },
+        {
+            $project: {
+                _id: 0,
+                timesheetId: 1,
+                location:1,
+                startDate: {$dateToString:{format:"%Y-%m-%d",date:"$startDate"}},
+                endDate: {$dateToString:{format:"%Y-%m-%d",date:"$endDate"}},
+                notes: 1,
+                "employee_Info.fName": 1,
+                "employee_Info.lName": 1,
+                "employee_Info.employeeId": 1,
+                "employee_Info.fullName": 1,
+                "employee_Info.status": 1,
+                "client_Info.name": 1,
+                "client_Info.status": 1,
+                "client_Info.clientId": 1,
 
             }
         },
@@ -68,9 +140,6 @@ module.exports.getOneTask = (req, resp,employeeId) => {
         },
         {
             $unwind: "$client_Info"
-        },
-        {
-            $unwind: "$project_Info",
         },
        
     ]
@@ -133,6 +202,7 @@ module.exports.getAllTask = (req, resp) => {
                 activityType: 1,
                 task: 1,
                 estimatedHours: 1,
+                consumedHours:1,
                 billable: 1,
                 notes: 1,
 

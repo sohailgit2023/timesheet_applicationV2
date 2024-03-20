@@ -9,12 +9,90 @@ const TimesheetSetting=require('./../models/Timesheetsetting')
 const helpers = require('./../helper/helper');
 const Common=require('./../helper/common')
 
+
+module.exports.getDirectReporteeAndEmpTimesheet = (req, resp,employeeId) => {
+    const selectParams = {
+        _id: 0
+    };
+ 
+    const pipeline = [
+ 
+        {
+            $lookup: {
+                from: 'employees',
+                localField: "employeeId",
+                foreignField: "employeeId",
+                as: "employee_Info"
+            }
+        },
+        {
+            $unwind: "$employee_Info"
+        },
+        {
+            $match: {
+                $or: [
+                    { employeeId: employeeId },
+                    { "employee_Info.leadId": employeeId }
+                ]
+            }
+        },
+       
+        {
+            $lookup: {
+                from: "clients",
+                localField: "clientId",
+                foreignField: "clientId",
+                as: "client_Info"
+            }
+        },
+       
+        {
+            $unwind: "$client_Info"
+        },
+        {
+            $project: {
+                _id: 0,
+                timesheetId: 1,
+                location:1,
+                startDate: {$dateToString:{format:"%d-%m-%Y",date:"$startDate"}},
+                endDate: {$dateToString:{format:"%d-%m-%Y",date:"$endDate"}},
+                notes: 1,
+                "employee_Info.fName": 1,
+                "employee_Info.lName": 1,
+                "employee_Info.employeeId": 1,
+                "employee_Info.fullName": 1,
+                "employee_Info.status": 1,
+                "client_Info.name": 1,
+                "client_Info.status": 1,
+                "client_Info.clientId": 1,
+ 
+            }
+        },
+    ];
+    TimesheetSetting.aggregation(pipeline).then(timesheet => {
+        if (timesheet) {
+            return helpers.success(resp, timesheet);
+        }
+        else {
+            return helpers.error(resp, 'Something went wrong');
+        }
+    }).catch(err => {
+        console.log(err);
+    })
+ 
+}
 module.exports.getOneTimesheetSetting = (req, resp,employeeId) => {
     const selectParams = {
         _id: 0
     };
     const pipeline = [
-        {$match:{employeeId:employeeId}},
+        {
+            $match: {
+                $or: [
+                    { employeeId: employeeId } // Include timesheets for the lead as well
+                ]
+            }
+        },
         {
             $lookup: {
                 from: 'employees',
@@ -132,6 +210,107 @@ module.exports.getAllTimesheetSetting = (req, resp) => {
     })
 
 }
+
+// module.exports.TeamTimesheets = async (req, resp, leadId) => {
+//     try {
+//         // Build the aggregation pipeline
+//         const pipeline = [
+//             {
+//                 $match: {
+//                     $or: [
+//                         { leadId: leadId },
+//                         { employeeId: leadId }
+//                     ]
+//                 }
+//             },
+//             {
+//                 $lookup: {
+//                     from: 'timesheets',
+//                     localField: 'employeeId',
+//                     foreignField: 'employeeId',
+//                     as: 'timesheets'
+//                 }
+//             },
+//             {
+//                 $unwind: {
+//                     path: '$timesheets',
+//                     preserveNullAndEmptyArrays: true 
+//                 }
+//             },
+//             {
+//                 $lookup: {
+//                     from: "clients",
+//                     localField: "timesheets.clientId",
+//                     foreignField: "clientId",
+//                     as: "clients"
+//                 }
+//             },
+//             {
+//                 $unwind: {
+//                     path: '$clients',
+//                     preserveNullAndEmptyArrays: true 
+//                 }
+//             },
+//             {
+//                 $group:{
+//                     _id:null,
+//                     timesheets: {
+//                         $addToSet: {
+//                             $mergeObjects: [
+//                                 {employeeId:'$employeeId', fullName:'$fullName'},
+//                                 {
+//                                     timesheet: {
+//                                         $mergeObjects: [
+//                                             "$timesheets",
+//                                             {
+//                                                 startDate: {
+//                                                     $dateToString: {
+//                                                         format: "%d-%m-%Y",
+//                                                         date: "$timesheets.startDate"
+//                                                     }
+//                                                 },
+//                                                 endDate: {
+//                                                     $dateToString: {
+//                                                         format: "%d-%m-%Y",
+//                                                         date: "$timesheets.endDate"
+//                                                     }
+//                                                 }
+//                                             }
+//                                         ]
+//                                     }
+//                                 },
+//                                 {client:"$clients"}
+//                             ]
+//                         }
+//                     },
+//                 }
+//             },
+//             {
+//                 $project:{
+//                     _id:0,
+//                     timesheets:1,
+//                 }
+//             },
+//         ];
+        
+//         // Execute the aggregation pipeline
+//         Employee.aggregation(pipeline).then(timesheet => {
+//             if (timesheet) {
+//                 return helpers.success(resp, timesheet);
+//             }
+//             else {
+//                 return helpers.error(resp, 'Something went wrong');
+//             }
+//         }).catch(err => {
+//             console.log(err);
+//         })
+//     } catch (err) {
+//         console.error(err); // Log the error for debugging purposes
+//         return helpers.error(resp, 'An error occurred while fetching timesheets');
+//     }
+// };
+
+
 module.exports.registerTimesheetsetting = (req, resp, postData) => {
     const { employeeId, clientId,location, startDate, endDate,notes } = postData;
     const locations= Common.locations;

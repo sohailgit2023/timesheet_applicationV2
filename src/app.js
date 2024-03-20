@@ -791,6 +791,11 @@ app.get('/task/:id', (req, resp) => {
     TaskController.getOneTask(req, resp, employeeId);
 });
 
+app.get('/task/directReportee/:id', (req, resp) => {
+    const employeeId = parseInt(req.params.id);
+    TaskController.getDirectReporteeAndEmpTask(req, resp, employeeId);
+});
+
 app.post('/addTask', async (req, resp) => {
     try {
         const formdata = req.body;
@@ -825,8 +830,13 @@ app.get('/timesheetsetting', (req, resp) => {
 
 app.get('/timesheetsetting/:id', (req, resp) => {
     const employeeId = parseInt(req.params.id);
-    TimesheetSettingController.getOneTimesheet(req, resp, employeeId);
+    TimesheetSettingController.getOneTimesheetSetting(req, resp, employeeId);
 });
+app.get('/timesheetsetting/directReportee/:id', (req, resp) => {
+    const employeeId = parseInt(req.params.id);
+    TimesheetSettingController.getDirectReporteeAndEmpTimesheet(req, resp, employeeId);
+});
+
 
 app.post('/addTimesheetSetting', async (req, resp) => {
     try {
