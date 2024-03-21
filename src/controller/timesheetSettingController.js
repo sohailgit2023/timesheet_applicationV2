@@ -54,11 +54,11 @@ module.exports.getDirectReporteeAndEmpTimesheet = (req, resp,employeeId) => {
                 _id: 0,
                 timesheetId: 1,
                 location:1,
-                startDate: {$dateToString:{format:"%d-%m-%Y",date:"$startDate"}},
-                endDate: {$dateToString:{format:"%d-%m-%Y",date:"$endDate"}},
+                startDate: {$dateToString:{format:"%Y-%m-%d",date:"$startDate"}},
+                endDate: {$dateToString:{format:"%Y-%m-%d",date:"$endDate"}},
                 notes: 1,
-                "employee_Info": 1,
-                "client_Info": 1,
+                employee_Info: 1,
+                client_Info: 1,
  
             }
         },
@@ -111,8 +111,8 @@ module.exports.getOneTimesheetSetting = (req, resp,employeeId) => {
                 startDate: {$dateToString:{format:"%Y-%m-%d",date:"$startDate"}},
                 endDate: {$dateToString:{format:"%Y-%m-%d",date:"$endDate"}},
                 notes: 1,
-                "employee_Info": 1,
-                "client_Info": 1,
+                employee_Info: 1,
+                client_Info: 1,
 
             }
         },
@@ -166,8 +166,8 @@ module.exports.getAllTimesheetSetting = (req, resp) => {
                 startDate: {$dateToString:{format:"%Y-%m-%d",date:"$startDate"}},
                 endDate: {$dateToString:{format:"%Y-%m-%d",date:"$endDate"}},
                 notes: 1,
-                "employee_Info": 1,
-                "client_Info": 1,
+                employee_Info: 1,
+                client_Info: 1,
 
             }
         },
